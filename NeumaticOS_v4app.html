@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeumaticOS — Neumáticos Importados</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#070c18;--bg2:#0c1220;--bg3:#101828;--bg4:#141f32;
+  --card:#0e1624;--card2:#121d2e;
+  --bord:#1a2640;--bord2:#1f2f4d;--bord3:#253660;
+  --p:#2563eb;--p2:#3b82f6;--p3:#60a5fa;--p4:#93c5fd;
+  --pg:linear-gradient(135deg,#1d4ed8,#3b82f6);
+  --cyan:#06b6d4;--cyan2:#22d3ee;--teal:#14b8a6;
+  --green:#10b981;--green2:#34d399;--gdim:#021a0e;
+  --amber:#f59e0b;--amber2:#fbbf24;--adim:#1c1200;
+  --red:#ef4444;--red2:#f87171;--rdim:#1a0505;
+  --purple:#8b5cf6;--purple2:#a78bfa;
+  --pink:#ec4899;
+  --text:#f0f4ff;--text2:#8b9dc0;--text3:#4a5878;--text4:#2e3d5c;
+  --outfit:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:8px;--r2:12px;--r3:16px;--sb:224px;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--outfit);font-size:14px}
+
+/* ══ LOGIN ══ */
+#loginScreen{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;z-index:9999;
+}
+.login-box{
+  background:var(--bg2);border:1px solid var(--bord2);border-radius:20px;
+  padding:40px;width:380px;text-align:center;
+  box-shadow:0 20px 60px #00000060;
+}
+.login-logo{
+  width:56px;height:56px;border-radius:14px;background:var(--pg);
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;margin:0 auto 16px;box-shadow:0 0 30px #2563eb50;
+}
+.login-title{font-size:22px;font-weight:800;margin-bottom:4px}
+.login-sub{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:28px}
+.login-input{
+  width:100%;background:var(--bg3);border:1px solid var(--bord2);border-radius:var(--r);
+  padding:11px 14px;color:var(--text);font-family:var(--outfit);font-size:13px;
+  outline:none;transition:.2s;margin-bottom:10px;
+}
+.login-input:focus{border-color:var(--p2);box-shadow:0 0 0 3px #2563eb18}
+.login-input::placeholder{color:var(--text3)}
+.login-btn{
+  width:100%;padding:12px;border:none;border-radius:var(--r);
+  background:var(--p);color:#fff;font-family:var(--outfit);font-size:14px;
+  font-weight:700;cursor:pointer;transition:.15s;margin-top:4px;
+}
+.login-btn:hover{background:#1d4ed8;box-shadow:0 4px 20px #2563eb40}
+.login-err{font-family:var(--mono);font-size:10px;color:var(--red2);margin-top:8px;display:none}
+.login-hint{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:16px;line-height:1.6}
+
+/* ══ SIDEBAR ══ */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:var(--sb);
+  background:var(--bg2);border-right:1px solid var(--bord);
+  display:flex;flex-direction:column;z-index:200;
+}
+.sb-logo{padding:16px;border-bottom:1px solid var(--bord);flex-shrink:0}
+.sb-logo-inner{display:flex;align-items:center;gap:10px}
+.sb-icon{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:var(--pg);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 20px #2563eb40}
+.sb-name{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.2px;line-height:1.2}
+.sb-name em{color:var(--p3);font-style:normal}
+.sb-tag{font-family:var(--mono);font-size:7px;color:var(--text3);letter-spacing:2px;margin-top:1px}
+.sb-nav{flex:1;padding:8px 6px;overflow-y:auto}
+.sb-nav::-webkit-scrollbar{width:3px}
+.sb-nav::-webkit-scrollbar-thumb{background:var(--bord2)}
+.nav-sep{font-family:var(--mono);font-size:7px;color:var(--text3);letter-spacing:2px;padding:10px 8px 4px;text-transform:uppercase}
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:8px 9px;
+  border-radius:var(--r);cursor:pointer;transition:.15s;
+  font-size:12px;font-weight:500;color:var(--text2);margin-bottom:1px;white-space:nowrap;overflow:hidden;
+}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:linear-gradient(90deg,#1d4ed815,#2563eb08);color:var(--p3);border-left:2px solid var(--p2)}
+.nav-item .ni{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-label{flex:1}
+.nav-badge{font-family:var(--mono);font-size:7px;font-weight:600;padding:2px 5px;border-radius:10px;flex-shrink:0}
+.nb-red{background:#ef444420;color:var(--red2);border:1px solid #ef444330}
+.nb-green{background:#10b98120;color:var(--green2);border:1px solid #10b98130}
+.nb-amber{background:#f59e0b20;color:var(--amber2);border:1px solid #f59e0b30}
+.nb-blue{background:#2563eb20;color:var(--p3);border:1px solid #2563eb30}
+.sb-bottom{padding:8px 6px;border-top:1px solid var(--bord);flex-shrink:0}
+.sb-user{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:var(--r);cursor:pointer;transition:.15s}
+.sb-user:hover{background:var(--bg3)}
+.sb-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:var(--pg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.sb-uname{font-size:11px;font-weight:600;color:var(--text)}
+.sb-urole{font-family:var(--mono);font-size:8px;color:var(--text3)}
+.sb-status{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);flex-shrink:0}
+
+/* Supabase indicator */
+.sb-db{
+  display:flex;align-items:center;gap:6px;padding:6px 9px;
+  font-family:var(--mono);font-size:8px;border-radius:5px;
+  margin:0 6px 6px;transition:.15s;
+}
+.sb-db.connected{background:#10b98110;border:1px solid #10b98130;color:var(--green2)}
+.sb-db.disconnected{background:#f59e0b10;border:1px solid #f59e0b30;color:var(--amber2)}
+.sb-db .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* ══ MAIN ══ */
+.main{margin-left:var(--sb);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{
+  height:52px;flex-shrink:0;background:var(--bg2);border-bottom:1px solid var(--bord);
+  display:flex;align-items:center;gap:10px;padding:0 18px;
+}
+.tb-title{font-size:15px;font-weight:700;color:var(--text)}
+.tb-sub{font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:3px}
+.tb-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.tb-search{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--bord2);border-radius:var(--r);padding:5px 10px;width:200px}
+.tb-search input{background:transparent;border:none;outline:none;color:var(--text);font-family:var(--outfit);font-size:11px;flex:1}
+.tb-search input::placeholder{color:var(--text3)}
+.tb-btn{width:32px;height:32px;border-radius:var(--r);background:var(--bg3);border:1px solid var(--bord2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:.15s;position:relative}
+.tb-btn:hover{border-color:var(--p2);background:var(--bg4)}
+.tb-notif{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--red);border:1.5px solid var(--bg2)}
+.tb-vendor{display:flex;align-items:center;gap:7px;padding:5px 10px;background:var(--bg3);border:1px solid var(--bord2);border-radius:var(--r);cursor:pointer}
+.tb-vendor .av{width:24px;height:24px;border-radius:50%;background:var(--pg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.tb-vendor-name{font-size:11px;font-weight:600}
+.tb-vendor-status{font-family:var(--mono);font-size:8px;color:var(--green)}
+
+/* Notif panel */
+.notif-panel{
+  position:absolute;top:52px;right:0;width:320px;
+  background:var(--bg2);border:1px solid var(--bord2);border-radius:0 0 12px 12px;
+  box-shadow:0 10px 40px #000a;z-index:500;display:none;max-height:400px;overflow-y:auto;
+}
+.notif-hdr{padding:12px 14px;border-bottom:1px solid var(--bord);display:flex;justify-content:space-between;align-items:center}
+.notif-title{font-size:12px;font-weight:700}
+.notif-clear{font-family:var(--mono);font-size:9px;color:var(--p3);cursor:pointer}
+.notif-item{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bord);cursor:pointer;transition:.15s}
+.notif-item:hover{background:var(--bg3)}
+.notif-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+.notif-text{font-size:11px;color:var(--text2);line-height:1.5}
+.notif-time{font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px}
+.notif-empty{padding:24px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text3)}
+
+.content{flex:1;overflow-y:auto;overflow-x:hidden}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:var(--bord2);border-radius:2px}
+.page{display:none;padding:18px;min-height:100%;animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ══ COMPONENTS ══ */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.metric-card{background:var(--card);border:1px solid var(--bord);border-radius:var(--r2);padding:16px 18px;transition:.2s;position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--p))}
+.metric-card:hover{border-color:var(--bord3);transform:translateY(-1px)}
+.mc-icon{position:absolute;top:14px;right:14px;font-size:20px;opacity:.2}
+.mc-label{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;margin-bottom:8px}
+.mc-value{font-size:26px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px}
+.mc-sub{font-family:var(--mono);font-size:8px;color:var(--text3)}
+.mc-sub .up{color:var(--green2)}.mc-sub .down{color:var(--red2)}
+
+.panel{background:var(--card);border:1px solid var(--bord);border-radius:var(--r2);overflow:hidden}
+.panel-hdr{padding:12px 16px;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:12px;font-weight:700;color:var(--text)}
+.panel-body{padding:14px 16px}
+.sec-title{font-size:14px;font-weight:700;color:var(--text)}
+.sec-action{font-family:var(--mono);font-size:8px;color:var(--p3);cursor:pointer;padding:4px 9px;border:1px solid var(--bord2);border-radius:5px;background:transparent;transition:.15s}
+.sec-action:hover{border-color:var(--p2);background:var(--bg4)}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.grid-65{display:grid;grid-template-columns:1.8fr 1fr;gap:12px;margin-bottom:16px}
+.grid-full{margin-bottom:16px}
+
+.chip{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);font-size:8px;font-weight:600;padding:2px 7px;border-radius:4px;letter-spacing:.3px}
+.chip::before{content:'●';font-size:5px}
+.chip-green{background:#10b98115;color:var(--green2);border:1px solid #10b98130}.chip-green::before{color:var(--green)}
+.chip-amber{background:#f59e0b15;color:var(--amber2);border:1px solid #f59e0b30}.chip-amber::before{color:var(--amber)}
+.chip-red{background:#ef444415;color:var(--red2);border:1px solid #ef444430}.chip-red::before{color:var(--red)}
+.chip-blue{background:#2563eb15;color:var(--p3);border:1px solid #2563eb30}.chip-blue::before{color:var(--p2)}
+.chip-purple{background:#8b5cf615;color:var(--purple2);border:1px solid #8b5cf630}.chip-purple::before{color:var(--purple)}
+.chip-cyan{background:#06b6d415;color:var(--cyan2);border:1px solid #06b6d430}.chip-cyan::before{color:var(--cyan)}
+
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;padding:8px 10px;text-align:left;border-bottom:1px solid var(--bord);background:var(--bg3)}
+.tbl td{padding:10px 10px;border-bottom:1px solid var(--bord);font-size:11px;color:var(--text2);transition:.1s}
+.tbl tr:last-child td{border:none}
+.tbl tr:hover td{background:#ffffff04;color:var(--text)}
+.tbl .td-main{color:var(--text);font-weight:600}
+.tbl .td-mono{font-family:var(--mono);font-size:9px}
+.tbl .td-amount{color:var(--green2);font-family:var(--mono);font-size:10px;font-weight:600}
+
+.btn{display:inline-flex;align-items:center;gap:5px;font-family:var(--outfit);font-size:11px;font-weight:600;padding:7px 14px;border-radius:var(--r);cursor:pointer;transition:.15s;border:none}
+.btn-primary{background:var(--p);color:#fff;box-shadow:0 2px 10px #2563eb25}
+.btn-primary:hover{background:#1d4ed8}
+.btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--bord2)}
+.btn-secondary:hover{border-color:var(--p2);color:var(--text)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#059669}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{background:#dc2626}
+.btn-sm{padding:4px 9px;font-size:10px}
+
+.form-group{margin-bottom:12px}
+.form-label{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;display:block}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--bord2);border-radius:var(--r);padding:8px 11px;color:var(--text);font-family:var(--outfit);font-size:12px;outline:none;transition:.2s}
+.form-input:focus{border-color:var(--p2);box-shadow:0 0 0 3px #2563eb15}
+.form-input::placeholder{color:var(--text3)}
+.form-select{width:100%;background:var(--bg3);border:1px solid var(--bord2);border-radius:var(--r);padding:8px 11px;color:var(--text);font-family:var(--outfit);font-size:12px;outline:none;cursor:pointer}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 20px;text-align:center}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.3}
+.empty-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.empty-sub{font-family:var(--mono);font-size:9px;color:var(--text3);line-height:1.7}
+
+.info-card{background:var(--card2);border:1px solid var(--bord);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px}
+.info-card-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+.info-card-title{font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px}
+.info-card-text{font-size:10px;color:var(--text3);line-height:1.6}
+
+.prog-bar{height:4px;background:var(--bord);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width .5s}
+.kpi-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bord)}
+.kpi-row:last-child{border:none}
+.kpi-name{font-size:11px;color:var(--text2)}.kpi-val{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text)}
+.kpi-bar{flex:1;margin:0 12px}
+
+.tabs{display:flex;border-bottom:1px solid var(--bord);flex-shrink:0;background:var(--bg3)}
+.tab-item{padding:9px 14px;font-family:var(--mono);font-size:8px;font-weight:600;letter-spacing:.8px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;white-space:nowrap}
+.tab-item:hover{color:var(--text2)}
+.tab-item.active{color:var(--p3);border-bottom-color:var(--p2)}
+
+/* Tags */
+.tag{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:8px;font-weight:600;padding:2px 8px;border-radius:20px;cursor:pointer;transition:.15s;margin:2px}
+.tag-vip{background:#f59e0b20;color:var(--amber2);border:1px solid #f59e0b40}
+.tag-gomeria{background:#8b5cf620;color:var(--purple2);border:1px solid #8b5cf640}
+.tag-taller{background:#06b6d420;color:var(--cyan2);border:1px solid #06b6d440}
+.tag-mayorista{background:#10b98120;color:var(--green2);border:1px solid #10b98140}
+.tag-minorista{background:#2563eb20;color:var(--p3);border:1px solid #2563eb40}
+.tag-cold{background:#ef444420;color:var(--red2);border:1px solid #ef444440}
+.tag-add{background:var(--bg3);color:var(--text3);border:1px dashed var(--bord2)}
+.tag-add:hover{border-color:var(--p2);color:var(--p3)}
+
+/* Modal base */
+.modal-overlay{position:fixed;inset:0;background:#000000b0;z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--bord2);border-radius:16px;width:700px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px #000}
+.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:14px;font-weight:700}
+.modal-close{background:var(--bg3);border:1px solid var(--bord2);border-radius:6px;color:var(--text2);padding:5px 10px;cursor:pointer;font-family:var(--outfit);font-size:11px}
+.modal-body{flex:1;overflow-y:auto;padding:18px 20px}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--bord);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;background:var(--bg3)}
+
+/* Kanban */
+#kanbanBoard{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;height:calc(100vh - 165px);overflow-x:auto}
+.kan-col{display:flex;flex-direction:column;background:var(--bg3);border:1px solid var(--bord);border-radius:10px;overflow:hidden;min-height:0}
+.kan-col-hdr{padding:10px 12px;border-bottom:1px solid var(--bord);flex-shrink:0}
+.kan-col-title{font-size:11px;font-weight:700}
+.kan-col-count{font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px}
+.kan-cards{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:5px}
+.kan-card{background:var(--card);border:1px solid var(--bord2);border-radius:7px;padding:9px;cursor:grab;transition:.15s;user-select:none}
+.kan-card:hover{border-color:var(--p2);transform:translateY(-1px)}
+.kan-card:active{cursor:grabbing}
+.kan-card-name{font-size:10px;font-weight:700;margin-bottom:3px}
+.kan-card-tel{font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:5px}
+.kan-card-nota{font-size:9px;color:var(--text2);border-top:1px solid var(--bord);padding-top:4px;margin-top:3px}
+.kan-card-btns{display:flex;gap:3px;margin-top:5px}
+.kan-btn{flex:1;padding:3px;border-radius:4px;font-size:8px;cursor:pointer;border:none;font-family:var(--mono);font-weight:600;transition:.15s}
+.kan-btn-wa{background:var(--gdim);border:1px solid var(--green);color:var(--green2)}
+.kan-btn-del{background:var(--rdim);border:1px solid var(--red);color:var(--red2);flex:0;padding:3px 6px}
+.kan-add{width:100%;padding:5px;background:transparent;border:1px dashed var(--bord2);border-radius:5px;color:var(--text3);font-size:9px;cursor:pointer;margin-top:2px;transition:.15s}
+.kan-add:hover{border-color:var(--p2);color:var(--p3)}
+
+/* Mapa clientes SVG */
+.mapa-prov{fill:#0c1a3a;stroke:#1e3a6e;stroke-width:.8;cursor:pointer;transition:fill .2s}
+.mapa-prov:hover{fill:#1a3060}
+
+/* GomeScraper */
+.gs-layout{display:grid;grid-template-columns:1fr 370px;gap:0;height:calc(100vh - 52px);margin:-18px}
+.gs-map-area{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--bord)}
+.gs-toolbar{display:flex;align-items:center;gap:5px;padding:7px 12px;background:var(--bg2);border-bottom:1px solid var(--bord);flex-shrink:0;flex-wrap:wrap}
+.gs-tb-label{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;margin-right:2px}
+.gs-mb{font-family:var(--mono);font-size:8px;font-weight:600;padding:3px 9px;border-radius:5px;border:1px solid var(--bord2);background:transparent;color:var(--text2);cursor:pointer;transition:.15s}
+.gs-mb:hover{border-color:var(--p2);color:var(--p3);background:var(--bg4)}
+.gs-mb.on{background:var(--p);color:#fff;border-color:var(--p)}
+.gs-map-canvas{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 40% 50%,#0c1a3a 0%,#060c18 70%);overflow:hidden;padding:8px}
+#gsMapa{width:auto;height:100%;max-height:calc(100vh - 150px);filter:drop-shadow(0 6px 28px #00000080)}
+.ps{stroke:#1e3a6e;stroke-width:.8;cursor:pointer;transition:fill .15s,stroke .15s,filter .15s}
+.ps:hover{filter:brightness(1.3) drop-shadow(0 0 7px #3b82f650)}
+.ps.sel{stroke:#3b82f6;stroke-width:1.8}.ps.run{stroke:#10b981;stroke-width:2;animation:gpulse 1s ease-in-out infinite alternate}
+.ps.done{stroke:#10b981;stroke-width:1.5}.ps.err{stroke:#ef4444;stroke-width:1.5}
+@keyframes gpulse{from{filter:drop-shadow(0 0 5px #10b98170)}to{filter:drop-shadow(0 0 18px #10b981b0)}}
+.plbl{font-family:'JetBrains Mono',monospace;font-size:7px;fill:#60a5fa;pointer-events:none;text-anchor:middle;dominant-baseline:middle}
+.gs-badge{position:absolute;pointer-events:none;background:#0c1220ee;backdrop-filter:blur(10px);border:1px solid var(--bord2);border-radius:10px}
+#gsCnt{top:10px;right:10px;padding:9px 13px;text-align:center}
+.gc-n{font-size:22px;font-weight:800;color:var(--p3);line-height:1;font-family:var(--outfit)}
+.gc-l{font-family:var(--mono);font-size:7px;color:var(--text3);letter-spacing:1.5px;margin-top:2px}
+#gsLeg{bottom:10px;left:10px;padding:8px 11px}
+.gl-r{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:8px;color:var(--text2);padding:2px 0}
+.gl-s{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.gs-right{background:var(--bg2);display:flex;flex-direction:column;overflow:hidden}
+.gs-key-bar{display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:1px solid var(--bord);background:var(--bg3);flex-shrink:0}
+.gs-klbl{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;white-space:nowrap}
+.gs-kwrap{flex:1;display:flex;align-items:center;background:var(--bg);border:1px solid var(--bord2);border-radius:5px;padding:0 8px;height:26px;transition:.2s}
+.gs-kwrap:focus-within{border-color:var(--p2)}
+.gs-kin{flex:1;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:10px;outline:none}
+.gs-kin::placeholder{color:var(--text3)}
+.gs-kpill{font-family:var(--mono);font-size:8px;font-weight:600;padding:2px 7px;border-radius:20px;white-space:nowrap;border:1px solid var(--bord2);color:var(--text3)}
+.gs-kpill.ok{color:var(--green2);border-color:#10b98140;background:#10b98110}
+.gs-kpill.bad{color:var(--red2);border-color:#ef444440;background:#ef444410}
+.gs-ka{font-family:var(--mono);font-size:8px;color:var(--p3);text-decoration:none;white-space:nowrap}
+.gs-stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--bord);flex-shrink:0}
+.gs-stat{text-align:center;padding:7px 3px;border-right:1px solid var(--bord)}
+.gs-stat:last-child{border:none}
+.gs-stat-n{font-size:15px;font-weight:800;color:var(--p3);line-height:1}
+.gs-stat-l{font-family:var(--mono);font-size:7px;color:var(--text3);letter-spacing:1px;margin-top:1px}
+.gs-qhdr{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;border-bottom:1px solid var(--bord);background:var(--bg3);flex-shrink:0}
+.gs-qtitle{font-family:var(--mono);font-size:8px;font-weight:600;color:var(--text3);letter-spacing:1.5px}
+.gs-qbtns{display:flex;gap:4px}
+.gs-qb{font-family:var(--mono);font-size:8px;font-weight:600;padding:3px 7px;border-radius:4px;border:1px solid var(--bord2);background:transparent;color:var(--text2);cursor:pointer;transition:.15s}
+.gs-qb:hover{border-color:var(--p2);color:var(--p3)}
+.gs-qb:disabled{opacity:.3;cursor:not-allowed}
+.gs-qb.run{background:var(--p);color:#fff;border-color:var(--p);padding:3px 11px}
+.gs-qb.run:hover:not(:disabled){background:#1d4ed8}
+.gs-qb.pause{background:var(--amber);color:#000;border-color:var(--amber)}
+.gs-qb.resume{background:var(--green);color:#fff;border-color:var(--green)}
+.gs-qlist{max-height:100px;overflow-y:auto;padding:5px 6px;display:flex;flex-direction:column;gap:2px;background:var(--bg3);border-bottom:1px solid var(--bord);flex-shrink:0}
+.gs-qempty{font-family:var(--mono);font-size:9px;color:var(--text3);text-align:center;padding:10px}
+.gs-qi{display:flex;align-items:center;gap:5px;padding:4px 7px;border-radius:4px;background:var(--bg2);border:1px solid var(--bord);font-family:var(--mono);font-size:8px;color:var(--text2)}
+.gs-qi.run{border-color:#10b98140;background:var(--gdim);color:var(--green2)}
+.gs-qi.done{color:var(--text3)}.gs-qi.err{border-color:#ef444440;background:var(--rdim);color:var(--red2)}
+.gs-qdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;background:var(--bord2)}
+.gs-qi.run .gs-qdot{background:var(--green);animation:blink .8s infinite}
+.gs-qi.done .gs-qdot{background:var(--green)}.gs-qi.err .gs-qdot{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.1}}
+.gs-qn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.gs-qc{color:var(--cyan);font-weight:600;font-size:7px}
+.gs-prg{padding:8px 11px;border-bottom:1px solid var(--bord);flex-shrink:0}
+.gs-prg-row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;margin-bottom:4px}
+.gs-prg-lbl{color:var(--text2)}.gs-prg-pct{color:var(--p3);font-weight:700}
+.gs-prg-track{height:4px;background:var(--bord);border-radius:2px;overflow:hidden}
+.gs-prg-fill{height:100%;background:linear-gradient(90deg,var(--p),var(--cyan));border-radius:2px;transition:width .35s;width:0%}
+.gs-prg-sub{font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gs-pause-banner{margin-top:5px;background:var(--adim);border:1px solid var(--amber);border-radius:4px;padding:4px 9px;font-family:var(--mono);font-size:8px;color:var(--amber2);text-align:center;display:none}
+.gs-tabs{display:flex;border-bottom:1px solid var(--bord);flex-shrink:0;background:var(--bg3)}
+.gs-tab{flex:1;padding:6px 4px;font-family:var(--mono);font-size:8px;font-weight:600;letter-spacing:.8px;color:var(--text3);text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:.15s;margin-bottom:-1px}
+.gs-tab:hover{color:var(--text2)}.gs-tab.on{color:var(--p3);border-bottom-color:var(--p2)}
+.gs-tc{display:none;flex:1;flex-direction:column;min-height:0;overflow:hidden}
+.gs-tc.on{display:flex}
+.gs-log{flex:1;overflow-y:auto;padding:6px;min-height:0;background:var(--bg2)}
+.gs-ll{padding:2px 4px;border-radius:3px;line-height:1.6;font-family:var(--mono);font-size:8px;margin-bottom:1px;color:var(--text2)}
+.gs-ll.ok{color:var(--green2);background:#10b98108}.gs-ll.w{color:var(--amber2);background:#f59e0b08}
+.gs-ll.e{color:var(--red2);background:#ef444408}.gs-ll.p{color:var(--amber);background:#f59e0b06}
+.gs-lt{color:var(--text3);margin-right:4px;font-size:7px}
+.gs-results{flex:1;overflow-y:auto;min-height:0}
+.gs-rc{padding:8px 11px;border-bottom:1px solid var(--bord);background:var(--bg2);margin-bottom:1px;animation:si .2s ease;transition:background .1s}
+.gs-rc:hover{background:var(--bg3)}
+@keyframes si{from{opacity:0;transform:translateX(5px)}to{opacity:1}}
+.gs-rcn{font-size:10px;font-weight:700;color:var(--text);margin-bottom:2px}
+.gs-rca{font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:3px;line-height:1.4}
+.gs-rcch{display:flex;flex-wrap:wrap;gap:2px}
+.gs-ch{font-family:var(--mono);font-size:7px;font-weight:600;padding:1px 5px;border-radius:3px}
+.gs-ch.z{background:var(--bg3);color:var(--text2);border:1px solid var(--bord2)}
+.gs-ch.t{background:#10b98110;color:var(--green2);border:1px solid #10b98130}
+.gs-ch.w{background:#3b82f610;color:var(--p3);border:1px solid #3b82f630}
+.gs-ch.r{background:#f59e0b10;color:var(--amber2);border:1px solid #f59e0b30}
+.gs-dl{padding:9px 11px;border-top:1px solid var(--bord);flex-shrink:0;background:var(--bg3);display:flex;gap:5px}
+.gs-dl-btn{flex:1;padding:8px;border-radius:5px;border:1px solid var(--green);background:#10b98110;color:var(--green2);font-family:var(--outfit);font-size:10px;font-weight:700;cursor:pointer;transition:.15s}
+.gs-dl-btn:hover:not(:disabled){background:var(--green);color:#fff}
+.gs-dl-btn:disabled{opacity:.2;cursor:not-allowed}
+.gs-crm-btn{padding:8px 12px;border-radius:5px;border:1px solid var(--p2);background:#2563eb10;color:var(--p3);font-family:var(--outfit);font-size:10px;font-weight:700;cursor:pointer;transition:.15s}
+.gs-crm-btn:hover:not(:disabled){background:var(--p);color:#fff}
+.gs-crm-btn:disabled{opacity:.2;cursor:not-allowed}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bord2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">🔧</div>
+    <div class="login-title">NeumaticOS</div>
+    <div class="login-sub">SISTEMA COMERCIAL INTELIGENTE</div>
+    <input class="login-input" id="loginUser" type="text" placeholder="Usuario" autocomplete="username">
+    <input class="login-input" id="loginPass" type="password" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-err" id="loginErr">Usuario o contraseña incorrectos</div>
+    <div class="login-hint">
+      Demo: usuario <strong>admin</strong> / contraseña <strong>admin123</strong><br>
+      Cambiá las credenciales en Configuración → Seguridad
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<div class="sidebar" id="sidebar" style="display:none">
+  <div class="sb-logo">
+    <div class="sb-logo-inner">
+      <div class="sb-icon">🔧</div>
+      <div>
+        <div class="sb-name">Neumatic<em>OS</em></div>
+        <div class="sb-tag">SISTEMA COMERCIAL v4.0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sb-nav">
+    <div class="nav-sep">Principal</div>
+    <div class="nav-item active" onclick="showPage('dashboard')"><span class="ni">📊</span><span class="nav-label">Dashboard</span></div>
+    <div class="nav-item" onclick="showPage('conversaciones')"><span class="ni">💬</span><span class="nav-label">Conversaciones</span><span class="nav-badge nb-red" id="badgeConv">0</span></div>
+    <div class="nav-item" onclick="showPage('contactos')"><span class="ni">👥</span><span class="nav-label">Contactos</span></div>
+    <div class="nav-item" onclick="showPage('pedidos')"><span class="ni">📦</span><span class="nav-label">Pedidos</span><span class="nav-badge nb-amber" id="badgePed">0</span></div>
+
+    <div class="nav-sep">Comercial</div>
+    <div class="nav-item" onclick="showPage('productos')"><span class="ni">🔩</span><span class="nav-label">Productos</span></div>
+    <div class="nav-item" onclick="showPage('cotizador')"><span class="ni">💰</span><span class="nav-label">Cotizador</span></div>
+    <div class="nav-item" onclick="showPage('promociones')"><span class="ni">🏷️</span><span class="nav-label">Promociones</span></div>
+    <div class="nav-item" onclick="showPage('envios')"><span class="ni">🚚</span><span class="nav-label">Envíos</span></div>
+
+    <div class="nav-sep">CRM Avanzado</div>
+    <div class="nav-item" onclick="showPage('pipeline')"><span class="ni">🎯</span><span class="nav-label">Pipeline de Ventas</span></div>
+    <div class="nav-item" onclick="showPage('campanas')"><span class="ni">📣</span><span class="nav-label">Campañas WhatsApp</span></div>
+    <div class="nav-item" onclick="showPage('seguimiento')"><span class="ni">⏰</span><span class="nav-label">Seguimiento Auto.</span><span class="nav-badge nb-amber" id="badgeSeg">0</span></div>
+    <div class="nav-item" onclick="showPage('mapa_clientes')"><span class="ni">🗺️</span><span class="nav-label">Mapa de Clientes</span></div>
+
+    <div class="nav-sep">Gestión</div>
+    <div class="nav-item" onclick="showPage('vendedores')"><span class="ni">🧑‍💼</span><span class="nav-label">Vendedores</span></div>
+    <div class="nav-item" onclick="showPage('reportes')"><span class="ni">📈</span><span class="nav-label">Reportes</span></div>
+    <div class="nav-item" onclick="showPage('templates')"><span class="ni">📝</span><span class="nav-label">Templates WA</span></div>
+
+    <div class="nav-sep">Herramientas</div>
+    <div class="nav-item" onclick="showPage('gomescraper')" style="border:1px solid #2563eb30;background:#2563eb08;margin-top:2px">
+      <span class="ni">🔍</span><span class="nav-label">GomeScraper PRO</span>
+      <span class="nav-badge nb-blue">PRO</span>
+    </div>
+
+    <div class="nav-sep">Sistema</div>
+    <div class="nav-item" onclick="showPage('configuracion')"><span class="ni">⚙️</span><span class="nav-label">Configuración</span></div>
+  </div>
+
+  <div class="sb-db" id="dbStatus"><span class="dot"></span><span id="dbStatusText">Sin conexión a BD</span></div>
+
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-avatar" id="userAvatar">A</div>
+      <div><div class="sb-uname" id="userName">Admin</div><div class="sb-urole" id="userRole">Administrador</div></div>
+      <div class="sb-status"></div>
+    </div>
+    <button onclick="doLogout()" style="width:100%;margin-top:4px;padding:5px;background:transparent;border:1px solid var(--bord2);border-radius:5px;color:var(--text3);font-size:10px;cursor:pointer;font-family:var(--outfit)">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main" id="mainApp" style="display:none">
+
+  <!-- TOPBAR -->
+  <div class="topbar" style="position:relative">
+    <div>
+      <span class="tb-title" id="pageTitle">Dashboard</span>
+      <span class="tb-sub" id="pageSub">/ Vista general</span>
+    </div>
+    <div class="tb-right">
+      <div class="tb-search"><span>🔍</span><input placeholder="Buscar contacto, pedido..."></div>
+      <div class="tb-btn" onclick="toggleNotif()">🔔<div class="tb-notif" id="notifDot" style="display:none"></div></div>
+      <div class="tb-btn" onclick="showPage('configuracion')">⚙️</div>
+      <div class="tb-vendor">
+        <div class="av" id="topAvatar">A</div>
+        <div><div class="tb-vendor-name" id="topName">Admin</div><div class="tb-vendor-status">● En línea</div></div>
+      </div>
+    </div>
+
+    <!-- Notif panel -->
+    <div class="notif-panel" id="notifPanel">
+      <div class="notif-hdr">
+        <span class="notif-title">Notificaciones</span>
+        <span class="notif-clear" onclick="clearNotifs()">Limpiar todo</span>
+      </div>
+      <div id="notifList"><div class="notif-empty">Sin notificaciones nuevas</div></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="metrics-grid">
+        <div class="metric-card" style="--accent:var(--p2)"><div class="mc-icon">💬</div><div class="mc-label">CONVERSACIONES HOY</div><div class="mc-value" id="mConv">—</div><div class="mc-sub">Conectá WhatsApp para datos</div></div>
+        <div class="metric-card" style="--accent:var(--amber)"><div class="mc-icon">📦</div><div class="mc-label">PEDIDOS HOY</div><div class="mc-value" id="mPed">—</div><div class="mc-sub">Sin pedidos registrados</div></div>
+        <div class="metric-card" style="--accent:var(--green)"><div class="mc-icon">💰</div><div class="mc-label">VENTAS HOY</div><div class="mc-value" id="mVentas">$—</div><div class="mc-sub">Sin ventas registradas</div></div>
+        <div class="metric-card" style="--accent:var(--cyan)"><div class="mc-icon">👥</div><div class="mc-label">TOTAL CONTACTOS</div><div class="mc-value" id="mContacts">0</div><div class="mc-sub">En tu CRM</div></div>
+      </div>
+
+      <div class="grid-65">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Actividad reciente</span><button class="sec-action" onclick="showPage('contactos')">Ver todos →</button></div>
+          <div id="dashActivity"><div class="empty-state" style="padding:36px"><div class="empty-icon">💬</div><div class="empty-title">Sin actividad reciente</div><div class="empty-sub">Importá contactos o conectá WhatsApp</div></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Estado del sistema</span></div>
+          <div class="panel-body">
+            <div class="kpi-row"><span class="kpi-name">Base de datos</span><span id="sysDb" class="kpi-val" style="color:var(--amber2)">Sin conectar</span></div>
+            <div class="kpi-row"><span class="kpi-name">WhatsApp</span><span class="kpi-val" style="color:var(--amber2)">Sin conectar</span></div>
+            <div class="kpi-row"><span class="kpi-name">Gemini IA</span><span class="kpi-val" style="color:var(--amber2)">Sin configurar</span></div>
+            <div class="kpi-row"><span class="kpi-name">Contactos</span><span class="kpi-val" id="sysContacts">0</span></div>
+            <div class="kpi-row"><span class="kpi-name">Pipeline</span><span class="kpi-val" id="sysPipe">0 leads</span></div>
+            <div class="kpi-row" style="border:none"><span class="kpi-name">Campañas activas</span><span class="kpi-val" id="sysCamp">0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="info-card"><div class="info-card-icon">📱</div><div><div class="info-card-title">WhatsApp — Evolution API</div><div class="info-card-text">Configurá en Ajustes → WhatsApp para recibir mensajes automáticamente.</div></div></div>
+        <div class="info-card"><div class="info-card-icon">🗄️</div><div><div class="info-card-title">Base de datos — Supabase</div><div class="info-card-text">Pegá tu URL y API Key en Ajustes → Supabase para sincronizar todo en la nube.</div></div></div>
+        <div class="info-card"><div class="info-card-icon">🤖</div><div><div class="info-card-title">IA — Gemini Flash</div><div class="info-card-text">Configurá tu API Key de Gemini para respuestas inteligentes y cotización automática.</div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ CONVERSACIONES ══ -->
+    <div class="page" id="page-conversaciones">
+      <div class="grid-65">
+        <div class="panel" style="height:calc(100vh - 110px)">
+          <div class="panel-hdr"><span class="panel-title">Conversaciones WhatsApp</span>
+            <div style="display:flex;gap:5px"><button class="btn btn-secondary btn-sm">Todas</button><button class="btn btn-secondary btn-sm">Nuevas</button><button class="btn btn-secondary btn-sm">En atención</button></div>
+          </div>
+          <div class="empty-state"><div class="empty-icon">💬</div><div class="empty-title">Sin conversaciones</div><div class="empty-sub">Conectá Evolution API + WhatsApp<br>en Configuración para empezar</div></div>
+        </div>
+        <div class="panel" style="height:calc(100vh - 110px)">
+          <div class="panel-hdr"><span class="panel-title">Detalle</span></div>
+          <div class="empty-state"><div class="empty-icon">👆</div><div class="empty-title">Seleccioná una conversación</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONTACTOS ══ -->
+    <div class="page" id="page-contactos">
+
+      <!-- Modal importar -->
+      <div class="modal-overlay" id="importModal">
+        <div class="modal-box">
+          <div class="modal-hdr">
+            <div><div class="modal-title">📥 Importar Contactos</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px">CSV o Excel · hasta 100.000 contactos · deduplicación automática</div></div>
+            <button class="modal-close" onclick="closeModal('importModal')">✕ Cerrar</button>
+          </div>
+          <div class="modal-body">
+            <div id="impStep1">
+              <div id="dropZone" onclick="document.getElementById('fileInput').click()"
+                style="border:2px dashed var(--bord2);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:.2s;background:var(--bg3)"
+                ondragover="this.style.borderColor='var(--p2)';event.preventDefault()"
+                ondragleave="this.style.borderColor='var(--bord2)'" ondrop="handleDrop(event)">
+                <div style="font-size:36px;margin-bottom:12px">📂</div>
+                <div style="font-size:14px;font-weight:700;margin-bottom:6px">Arrastrá tu archivo aquí o hacé clic</div>
+                <div style="font-family:var(--mono);font-size:10px;color:var(--text3)">CSV · XLS · XLSX — hasta 100.000 filas</div>
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFile(this.files[0])">
+                <div style="margin-top:14px"><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Seleccionar archivo</button></div>
+              </div>
+              <div style="margin-top:16px">
+                <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;margin-bottom:8px">FORMATO ESPERADO</div>
+                <div style="background:var(--bg3);border:1px solid var(--bord);border-radius:8px;overflow:hidden">
+                  <table class="tbl">
+                    <thead><tr><th>NOMBRE</th><th>TELÉFONO</th><th>DIRECCIÓN</th><th>PROVINCIA</th><th>OTROS</th></tr></thead>
+                    <tbody>
+                      <tr><td class="td-main">Juan Pérez</td><td class="td-mono">+54 9 11 1234-5678</td><td>Av. Rivadavia 1234</td><td>Buenos Aires</td><td style="color:var(--text3)">email, medidas...</td></tr>
+                      <tr><td class="td-main">María García</td><td class="td-mono">3514567890</td><td>San Martín 456</td><td>Córdoba</td><td style="color:var(--text3)">—</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:8px;line-height:1.8">
+                  ⚡ Detección automática de columnas · 🔄 Duplicados omitidos · 🧹 Teléfonos normalizados al formato +54
+                </div>
+              </div>
+            </div>
+            <div id="impStep2" style="display:none">
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+                <div style="background:var(--bg3);border:1px solid var(--bord);border-radius:8px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--p3)" id="impTotal">0</div><div style="font-family:var(--mono);font-size:7px;color:var(--text3)">TOTAL</div></div>
+                <div style="background:var(--bg3);border:1px solid var(--bord);border-radius:8px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--green2)" id="impValid">0</div><div style="font-family:var(--mono);font-size:7px;color:var(--text3)">VÁLIDOS</div></div>
+                <div style="background:var(--bg3);border:1px solid var(--bord);border-radius:8px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--amber2)" id="impDupes">0</div><div style="font-family:var(--mono);font-size:7px;color:var(--text3)">DUPLICADOS</div></div>
+                <div style="background:var(--bg3);border:1px solid var(--bord);border-radius:8px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--red2)" id="impErrors">0</div><div style="font-family:var(--mono);font-size:7px;color:var(--text3)">SIN TEL.</div></div>
+              </div>
+              <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;margin-bottom:7px">PRIMEROS 5 REGISTROS</div>
+              <div style="background:var(--bg3);border:1px solid var(--bord);border-radius:8px;overflow:hidden;margin-bottom:14px"><table class="tbl" id="previewTable"></table></div>
+            </div>
+            <div id="impStep3" style="display:none;text-align:center;padding:30px">
+              <div style="font-size:44px;margin-bottom:14px">✅</div>
+              <div style="font-size:16px;font-weight:800;margin-bottom:6px">¡Importación completada!</div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--text3)" id="impResultMsg"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" id="impBtnBack" onclick="backToStep1()" style="display:none">← Volver</button>
+            <button class="btn btn-secondary" onclick="closeModal('importModal')">Cancelar</button>
+            <button class="btn btn-primary" id="impBtnConfirm" onclick="confirmImport()" style="display:none">✅ Confirmar importación</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal 360° -->
+      <div class="modal-overlay" id="contact360Modal">
+        <div class="modal-box" style="width:760px">
+          <div class="modal-hdr">
+            <div><div class="modal-title" id="c360Name">—</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px" id="c360Tel">—</div></div>
+            <button class="modal-close" onclick="closeModal('contact360Modal')">✕ Cerrar</button>
+          </div>
+          <div class="modal-body" id="c360Body"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div><div class="sec-title">Contactos / CRM</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px">Base de clientes — <span id="contactCount" style="color:var(--p3)">0 contactos</span></div></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="exportContacts()">📤 Exportar</button>
+          <button class="btn btn-secondary btn-sm" onclick="openModal('importModal')">📥 Importar</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('importModal')">+ Agregar</button>
+        </div>
+      </div>
+
+      <!-- Filtros + etiquetas rápidas -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+        <div class="tb-search" style="width:220px"><span>🔍</span><input id="contactSearch" placeholder="Nombre o teléfono..." oninput="filterContacts()"></div>
+        <select class="form-select" id="filterProv" style="width:140px;padding:5px 9px;font-size:11px;height:32px" onchange="filterContacts()">
+          <option value="">Todas las provincias</option>
+          <option>Buenos Aires</option><option>CABA</option><option>Córdoba</option><option>Santa Fe</option>
+          <option>Mendoza</option><option>Tucumán</option><option>Salta</option><option>Entre Ríos</option>
+          <option>Chaco</option><option>Corrientes</option><option>Misiones</option><option>San Juan</option>
+          <option>Jujuy</option><option>Río Negro</option><option>Neuquén</option><option>Formosa</option>
+          <option>Chubut</option><option>San Luis</option><option>Catamarca</option><option>La Rioja</option>
+          <option>La Pampa</option><option>Santa Cruz</option><option>Tierra del Fuego</option><option>Santiago del Estero</option>
+        </select>
+        <select class="form-select" id="filterEstado" style="width:120px;padding:5px 9px;font-size:11px;height:32px" onchange="filterContacts()">
+          <option value="">Todos</option><option>Activo</option><option>Frío</option><option>Perdido</option><option>Lead</option>
+        </select>
+        <div style="display:flex;gap:3px;flex-wrap:wrap">
+          <span class="tag tag-vip" onclick="filterByTag('VIP')">⭐ VIP</span>
+          <span class="tag tag-gomeria" onclick="filterByTag('Gomería')">🔧 Gomería</span>
+          <span class="tag tag-taller" onclick="filterByTag('Taller')">🏭 Taller</span>
+          <span class="tag tag-mayorista" onclick="filterByTag('Mayorista')">📦 Mayorista</span>
+        </div>
+        <div style="margin-left:auto;font-family:var(--mono);font-size:8px;color:var(--text3)">
+          <span id="showingCount" style="color:var(--p3)">0</span> / <span id="totalCount">0</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th style="width:28px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" style="accent-color:var(--p2)"></th>
+                <th>NOMBRE</th><th>TELÉFONO</th><th>PROVINCIA</th><th>ETIQUETAS</th><th>ESTADO</th><th>FUENTE</th><th>ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody id="contactsTbody">
+              <tr><td colspan="8"><div class="empty-state" style="padding:40px"><div class="empty-icon">👥</div><div class="empty-title">Sin contactos</div><div class="empty-sub">Usá "Importar" para cargar tu base de 100k clientes</div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--bord);background:var(--bg3)">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">Página <span id="curPage">1</span> de <span id="totPages">1</span></div>
+          <div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="changePage(-1)">← Ant.</button><button class="btn btn-secondary btn-sm" onclick="changePage(1)">Sig. →</button></div>
+          <select style="background:var(--bg3);border:1px solid var(--bord2);border-radius:4px;color:var(--text2);padding:2px 7px;font-size:8px;font-family:var(--mono)" onchange="setPageSize(parseInt(this.value))">
+            <option value="50">50/pág</option><option value="100">100/pág</option><option value="200">200/pág</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PEDIDOS ══ -->
+    <div class="page" id="page-pedidos">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div><div class="sec-title">Gestión de Pedidos</div></div>
+        <button class="btn btn-primary btn-sm">+ Nuevo pedido</button>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-card" style="--accent:var(--amber)"><div class="mc-label">PENDIENTES</div><div class="mc-value">—</div></div>
+        <div class="metric-card" style="--accent:var(--p2)"><div class="mc-label">EN PREPARACIÓN</div><div class="mc-value">—</div></div>
+        <div class="metric-card" style="--accent:var(--cyan)"><div class="mc-label">ENVIADOS</div><div class="mc-value">—</div></div>
+        <div class="metric-card" style="--accent:var(--green)"><div class="mc-label">ENTREGADOS</div><div class="mc-value">—</div></div>
+      </div>
+      <div class="panel"><div class="empty-state" style="padding:50px"><div class="empty-icon">📦</div><div class="empty-title">Sin pedidos registrados</div><div class="empty-sub">Los pedidos confirmados por WhatsApp aparecerán aquí</div></div></div>
+    </div>
+
+    <!-- ══ PRODUCTOS ══ -->
+    <div class="page" id="page-productos">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div><div class="sec-title">Catálogo de Productos</div></div>
+        <div style="display:flex;gap:6px"><button class="btn btn-secondary btn-sm">📥 Importar Sheets</button><button class="btn btn-primary btn-sm">+ Agregar</button></div>
+      </div>
+      <div class="panel"><table class="tbl"><thead><tr><th>MEDIDA</th><th>MARCA</th><th>MODELO</th><th>STOCK</th><th>PRECIO</th><th>ESTADO</th></tr></thead>
+        <tbody><tr><td colspan="6"><div class="empty-state" style="padding:40px"><div class="empty-icon">🔩</div><div class="empty-title">Sin productos</div><div class="empty-sub">Importá tu catálogo desde Google Sheets</div></div></td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- ══ COTIZADOR ══ -->
+    <div class="page" id="page-cotizador">
+      <div style="margin-bottom:14px"><div class="sec-title">Cotizador Automático</div></div>
+      <div class="grid2">
+        <div class="panel"><div class="panel-hdr"><span class="panel-title">Nueva cotización</span></div><div class="panel-body">
+          <div class="form-group"><label class="form-label">MEDIDA DE CUBIERTA</label><input class="form-input" placeholder="Ej: 195/55R15, 205/65R16..."></div>
+          <div class="form-group"><label class="form-label">VEHÍCULO (opcional)</label><input class="form-input" placeholder="Ej: Chevrolet Cruze 2019"></div>
+          <div class="form-group"><label class="form-label">TARJETA / CUOTAS</label>
+            <select class="form-select"><option>Efectivo / Transferencia</option><option>Visa 3 cuotas</option><option>Visa 6 cuotas</option><option>Visa 12 cuotas</option><option>Mastercard 6 cuotas</option><option>Naranja 6 cuotas</option></select>
+          </div>
+          <button class="btn btn-primary" style="width:100%">🔍 Buscar productos</button>
+        </div></div>
+        <div class="panel"><div class="panel-hdr"><span class="panel-title">Resultados</span></div><div class="empty-state"><div class="empty-icon">💰</div><div class="empty-title">Ingresá una medida</div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ PROMOCIONES ══ -->
+    <div class="page" id="page-promociones">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div><div class="sec-title">Promociones</div></div>
+        <button class="btn btn-primary btn-sm">+ Nueva promoción</button>
+      </div>
+      <div class="panel"><div class="empty-state" style="padding:50px"><div class="empty-icon">🏷️</div><div class="empty-title">Sin promociones activas</div></div></div>
+    </div>
+
+    <!-- ══ ENVÍOS ══ -->
+    <div class="page" id="page-envios">
+      <div style="margin-bottom:14px"><div class="sec-title">Gestión de Envíos</div></div>
+      <div class="metrics-grid">
+        <div class="metric-card" style="--accent:var(--amber)"><div class="mc-label">PENDIENTES</div><div class="mc-value">—</div></div>
+        <div class="metric-card" style="--accent:var(--cyan)"><div class="mc-label">EN TRÁNSITO</div><div class="mc-value">—</div></div>
+        <div class="metric-card" style="--accent:var(--green)"><div class="mc-label">ENTREGADOS</div><div class="mc-value">—</div></div>
+        <div class="metric-card" style="--accent:var(--red)"><div class="mc-label">PROBLEMAS</div><div class="mc-value">—</div></div>
+      </div>
+      <div class="panel"><div class="empty-state" style="padding:50px"><div class="empty-icon">🚚</div><div class="empty-title">Sin envíos registrados</div></div></div>
+    </div>
+
+    <!-- ══ PIPELINE KANBAN ══ -->
+    <div class="page" id="page-pipeline">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div><div class="sec-title">Pipeline de Ventas</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px">Arrastrá los leads entre etapas</div></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">Total: <span id="pipeTotal" style="color:var(--p3)">0</span></div>
+          <button class="btn btn-primary btn-sm" onclick="addPipeCard()">+ Agregar lead</button>
+        </div>
+      </div>
+      <div id="kanbanBoard"></div>
+    </div>
+
+    <!-- ══ CAMPAÑAS ══ -->
+    <div class="page" id="page-campanas">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div><div class="sec-title">Campañas de WhatsApp</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px">Mensajes masivos personalizados</div></div>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('campanaForm').style.display='block';updateCampCount()">+ Nueva campaña</button>
+      </div>
+
+      <div id="campanaForm" style="display:none;margin-bottom:14px">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">📣 Configurar nueva campaña</span><button class="btn btn-secondary btn-sm" onclick="document.getElementById('campanaForm').style.display='none'">✕</button></div>
+          <div class="panel-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div>
+                <div class="form-group"><label class="form-label">NOMBRE DE LA CAMPAÑA</label><input class="form-input" id="campNombre" placeholder="Ej: Promo Invierno 2025"></div>
+                <div class="form-group"><label class="form-label">SEGMENTO</label>
+                  <select class="form-select" id="campSegmento" onchange="updateCampCount()">
+                    <option value="todos">Todos los contactos</option>
+                    <option value="activos">Solo activos</option>
+                    <option value="frios">Clientes fríos</option>
+                    <option value="perdidos">Clientes perdidos</option>
+                    <option value="vip">Etiqueta VIP</option>
+                    <option value="gomeria">Etiqueta Gomería</option>
+                  </select>
+                </div>
+                <div style="background:var(--bg3);border:1px solid var(--bord);border-radius:8px;padding:12px;margin-bottom:10px">
+                  <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:5px">DESTINATARIOS</div>
+                  <div style="font-size:22px;font-weight:800;color:var(--p3)" id="campCount">0</div>
+                </div>
+                <div style="background:var(--adim);border:1px solid var(--amber);border-radius:7px;padding:10px;font-family:var(--mono);font-size:8px;color:var(--amber2);line-height:1.6">
+                  ⚠️ Máximo 50-100 mensajes/día para no ser bloqueado por WhatsApp.
+                </div>
+              </div>
+              <div>
+                <div class="form-group"><label class="form-label">MENSAJE (usá {nombre} para personalizar)</label>
+                  <textarea class="form-input" id="campMensaje" rows="6" style="resize:vertical" oninput="document.getElementById('campPreview').textContent=this.value.replace('{nombre}','Juan Pérez')" placeholder="Hola {nombre} 👋 Somos Neumáticos Importados..."></textarea>
+                </div>
+                <div style="background:var(--bg4);border:1px solid var(--bord2);border-radius:7px;padding:11px">
+                  <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:5px">VISTA PREVIA</div>
+                  <div style="font-size:11px;color:var(--text2);line-height:1.6" id="campPreview">—</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:12px;justify-content:flex-end">
+              <button class="btn btn-secondary" onclick="document.getElementById('campanaForm').style.display='none'">Cancelar</button>
+              <button class="btn btn-primary" onclick="launchCamp()">🚀 Crear campaña</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="campanasList">
+        <div id="campasTable"><div class="empty-state" style="padding:50px"><div class="empty-icon">📣</div><div class="empty-title">Sin campañas aún</div><div class="empty-sub">Creá tu primera campaña para reactivar<br>tu base de 100k clientes</div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ SEGUIMIENTO ══ -->
+    <div class="page" id="page-seguimiento">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div><div class="sec-title">Seguimiento Automático</div></div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-card" style="--accent:var(--red)"><div class="mc-icon">🔥</div><div class="mc-label">SIN RESPUESTA +48HS</div><div class="mc-value" id="seg48">0</div></div>
+        <div class="metric-card" style="--accent:var(--amber)"><div class="mc-icon">🌡️</div><div class="mc-label">CLIENTES FRÍOS</div><div class="mc-value" id="segFrios">0</div></div>
+        <div class="metric-card" style="--accent:var(--purple)"><div class="mc-icon">💔</div><div class="mc-label">CLIENTES PERDIDOS</div><div class="mc-value" id="segPerdidos">0</div></div>
+        <div class="metric-card" style="--accent:var(--green)"><div class="mc-icon">✅</div><div class="mc-label">SEGUIMIENTOS HOY</div><div class="mc-value" id="segHoy">0</div></div>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">⚙️ Reglas automáticas</span></div>
+          <div class="panel-body">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="info-card" style="border-left:3px solid var(--amber)"><div style="font-size:18px">⏰</div><div><div class="info-card-title">Sin respuesta en 24hs</div><div class="info-card-text">Enviar seguimiento automático.</div><label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-family:var(--mono);font-size:8px;color:var(--text3)"><input type="checkbox" id="rule1" style="accent-color:var(--p2)"> ACTIVO</label></div></div>
+              <div class="info-card" style="border-left:3px solid var(--red)"><div style="font-size:18px">🌡️</div><div><div class="info-card-title">Sin actividad 30 días → Frío</div><div class="info-card-text">Marcar como frío y enviar reactivación.</div><label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-family:var(--mono);font-size:8px;color:var(--text3)"><input type="checkbox" id="rule2" style="accent-color:var(--p2)"> ACTIVO</label></div></div>
+              <div class="info-card" style="border-left:3px solid var(--green)"><div style="font-size:18px">🎉</div><div><div class="info-card-title">Post-venta 7 días</div><div class="info-card-text">Preguntar satisfacción y ofrecer próxima compra.</div><label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-family:var(--mono);font-size:8px;color:var(--text3)"><input type="checkbox" id="rule3" style="accent-color:var(--p2)"> ACTIVO</label></div></div>
+              <div class="info-card" style="border-left:3px solid var(--cyan)"><div style="font-size:18px">🔄</div><div><div class="info-card-title">Recordatorio renovación 12 meses</div><div class="info-card-text">Recordar que es tiempo de revisar cubiertas.</div><label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-family:var(--mono);font-size:8px;color:var(--text3)"><input type="checkbox" id="rule4" style="accent-color:var(--p2)"> ACTIVO</label></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-hdr"><span class="panel-title">📋 Cola pendiente</span></div><div id="segCola"><div class="empty-state" style="padding:40px"><div class="empty-icon">✅</div><div class="empty-title">Todo al día</div><div class="empty-sub">Importá contactos para activar reglas.</div></div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ MAPA DE CLIENTES ══ -->
+    <div class="page" id="page-mapa_clientes">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div><div class="sec-title">Mapa de Clientes</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px">Total mapeado: <span id="mapaTotal" style="color:var(--p3)">0</span></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 260px;gap:12px;height:calc(100vh - 155px)">
+        <div class="panel" style="overflow:hidden;position:relative">
+          <div style="position:absolute;top:10px;left:10px;z-index:10;background:var(--bg2);border:1px solid var(--bord2);border-radius:7px;padding:7px 11px">
+            <div style="font-family:var(--mono);font-size:7px;color:var(--text3);margin-bottom:5px">INTENSIDAD</div>
+            <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:8px;color:var(--text2)">
+              <div style="width:55px;height:7px;border-radius:3px;background:linear-gradient(90deg,#0c1a3a,#1d4ed8,#60a5fa)"></div>
+              <span>Poco → Muchos</span>
+            </div>
+          </div>
+          <svg id="mapaClientes" viewBox="80 5 420 840" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+            <rect x="80" y="5" width="420" height="840" fill="#060c18" rx="10"/>
+            <text x="462" y="380" font-family="JetBrains Mono" font-size="8" fill="#0e2040" text-anchor="middle" transform="rotate(90,462,380)">OCÉANO ATLÁNTICO</text>
+            <g id="mcg-Jujuy" onclick="mapaClick('Jujuy')" style="cursor:pointer"><path id="mcp-Jujuy" d="M183 22 L220 19 L238 36 L232 68 L210 76 L186 70 L172 50 Z" class="mapa-prov"/><text x="205" y="48" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">JUJUY</text><text id="mct-Jujuy" x="205" y="58" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Salta" onclick="mapaClick('Salta')" style="cursor:pointer"><path id="mcp-Salta" d="M220 19 L305 15 L325 32 L320 72 L295 84 L258 78 L238 68 L232 36 Z" class="mapa-prov"/><text x="272" y="45" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">SALTA</text><text id="mct-Salta" x="272" y="56" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Formosa" onclick="mapaClick('Formosa')" style="cursor:pointer"><path id="mcp-Formosa" d="M305 15 L395 12 L415 30 L410 60 L372 66 L325 60 L320 32 Z" class="mapa-prov"/><text x="365" y="35" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">FORMOSA</text><text id="mct-Formosa" x="365" y="46" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Chaco" onclick="mapaClick('Chaco')" style="cursor:pointer"><path id="mcp-Chaco" d="M325 60 L368 66 L410 60 L428 80 L422 115 L378 121 L340 113 L326 91 Z" class="mapa-prov"/><text x="378" y="88" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">CHACO</text><text id="mct-Chaco" x="378" y="99" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Misiones" onclick="mapaClick('Misiones')" style="cursor:pointer"><path id="mcp-Misiones" d="M428 53 L470 48 L486 68 L480 112 L450 120 L428 98 L420 75 Z" class="mapa-prov"/><text x="453" y="83" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">MIS.</text><text id="mct-Misiones" x="453" y="93" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Tucumán" onclick="mapaClick('Tucumán')" style="cursor:pointer"><path id="mcp-Tucumán" d="M208 74 L248 71 L260 95 L248 119 L220 117 L204 99 Z" class="mapa-prov"/><text x="232" y="93" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">TUC.</text><text id="mct-Tucumán" x="232" y="103" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Santiago del Estero" onclick="mapaClick('Santiago del Estero')" style="cursor:pointer"><path id="mcp-Santiago del Estero" d="M248 71 L298 68 L340 84 L344 127 L320 149 L288 155 L258 137 L252 113 L260 95 Z" class="mapa-prov"/><text x="298" y="108" font-family="JetBrains Mono" font-size="5.5" fill="#60a5fa" text-anchor="middle">SGO.E.</text><text id="mct-Santiago del Estero" x="298" y="118" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Catamarca" onclick="mapaClick('Catamarca')" style="cursor:pointer"><path id="mcp-Catamarca" d="M172 72 L208 70 L204 99 L220 118 L202 148 L178 162 L152 147 L148 117 L162 89 Z" class="mapa-prov"/><text x="181" y="118" font-family="JetBrains Mono" font-size="5.5" fill="#60a5fa" text-anchor="middle">CAT.</text><text id="mct-Catamarca" x="181" y="128" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-La Rioja" onclick="mapaClick('La Rioja')" style="cursor:pointer"><path id="mcp-La Rioja" d="M148 117 L180 111 L202 129 L200 173 L176 191 L146 183 L130 159 L136 135 Z" class="mapa-prov"/><text x="167" y="150" font-family="JetBrains Mono" font-size="5.5" fill="#60a5fa" text-anchor="middle">LA RIOJA</text><text id="mct-La Rioja" x="167" y="160" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Corrientes" onclick="mapaClick('Corrientes')" style="cursor:pointer"><path id="mcp-Corrientes" d="M340 113 L382 107 L448 117 L452 157 L428 184 L382 190 L354 166 L344 139 Z" class="mapa-prov"/><text x="400" y="148" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">CORRIENTES</text><text id="mct-Corrientes" x="400" y="159" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Entre Ríos" onclick="mapaClick('Entre Ríos')" style="cursor:pointer"><path id="mcp-Entre Ríos" d="M354 166 L398 160 L428 180 L424 220 L396 234 L362 224 L346 200 Z" class="mapa-prov"/><text x="390" y="197" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">E.RÍOS</text><text id="mct-Entre Ríos" x="390" y="208" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Santa Fe" onclick="mapaClick('Santa Fe')" style="cursor:pointer"><path id="mcp-Santa Fe" d="M288 146 L344 139 L362 157 L360 226 L332 242 L296 234 L280 206 L282 170 Z" class="mapa-prov"/><text x="322" y="192" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">SANTA FE</text><text id="mct-Santa Fe" x="322" y="203" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Córdoba" onclick="mapaClick('Córdoba')" style="cursor:pointer"><path id="mcp-Córdoba" d="M198 162 L288 154 L312 170 L316 246 L288 268 L244 274 L208 253 L192 220 L196 182 Z" class="mapa-prov"/><text x="254" y="212" font-family="JetBrains Mono" font-size="7" fill="#60a5fa" text-anchor="middle">CÓRDOBA</text><text id="mct-Córdoba" x="254" y="224" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-San Juan" onclick="mapaClick('San Juan')" style="cursor:pointer"><path id="mcp-San Juan" d="M118 148 L153 142 L178 158 L176 206 L148 222 L118 212 L103 186 L108 162 Z" class="mapa-prov"/><text x="141" y="183" font-family="JetBrains Mono" font-size="5.5" fill="#60a5fa" text-anchor="middle">SAN JUAN</text><text id="mct-San Juan" x="141" y="194" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-San Luis" onclick="mapaClick('San Luis')" style="cursor:pointer"><path id="mcp-San Luis" d="M192 198 L228 192 L254 208 L258 257 L230 275 L196 268 L176 248 L180 218 Z" class="mapa-prov"/><text x="217" y="233" font-family="JetBrains Mono" font-size="5.5" fill="#60a5fa" text-anchor="middle">SAN LUIS</text><text id="mct-San Luis" x="217" y="244" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Mendoza" onclick="mapaClick('Mendoza')" style="cursor:pointer"><path id="mcp-Mendoza" d="M98 186 L132 176 L156 194 L176 242 L164 290 L132 306 L102 290 L86 260 L86 214 Z" class="mapa-prov"/><text x="128" y="243" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">MENDOZA</text><text id="mct-Mendoza" x="128" y="254" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Buenos Aires" onclick="mapaClick('Buenos Aires')" style="cursor:pointer"><path id="mcp-Buenos Aires" d="M248 256 L336 248 L402 260 L432 294 L444 352 L432 414 L398 456 L348 478 L296 480 L252 456 L220 414 L206 366 L210 310 L228 275 Z" class="mapa-prov"/><text x="328" y="368" font-family="JetBrains Mono" font-size="7" fill="#60a5fa" text-anchor="middle">BUENOS AIRES</text><text id="mct-Buenos Aires" x="328" y="380" font-family="JetBrains Mono" font-size="8" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-CABA" onclick="mapaClick('CABA')" style="cursor:pointer"><path id="mcp-CABA" d="M315 303 L336 298 L344 314 L330 324 L312 320 Z" fill="#1d4ed8" stroke="#60a5fa" stroke-width="1.5"/><text x="328" y="313" font-family="JetBrains Mono" font-size="5.5" fill="#fff" text-anchor="middle">CABA</text></g>
+            <g id="mcg-La Pampa" onclick="mapaClick('La Pampa')" style="cursor:pointer"><path id="mcp-La Pampa" d="M174 265 L254 258 L248 334 L238 396 L204 412 L166 396 L146 354 L150 300 Z" class="mapa-prov"/><text x="198" y="338" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">LA PAMPA</text><text id="mct-La Pampa" x="198" y="350" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Neuquén" onclick="mapaClick('Neuquén')" style="cursor:pointer"><path id="mcp-Neuquén" d="M86 290 L128 282 L150 302 L153 354 L128 388 L96 394 L70 366 L68 324 Z" class="mapa-prov"/><text x="111" y="338" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">NQN</text><text id="mct-Neuquén" x="111" y="349" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Río Negro" onclick="mapaClick('Río Negro')" style="cursor:pointer"><path id="mcp-Río Negro" d="M68 394 L148 386 L240 398 L252 436 L228 466 L180 480 L126 480 L78 463 L54 432 L56 410 Z" class="mapa-prov"/><text x="157" y="432" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">RÍO NEGRO</text><text id="mct-Río Negro" x="157" y="443" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Chubut" onclick="mapaClick('Chubut')" style="cursor:pointer"><path id="mcp-Chubut" d="M54 476 L188 468 L208 486 L212 552 L190 580 L128 586 L68 568 L42 534 L42 500 Z" class="mapa-prov"/><text x="128" y="522" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">CHUBUT</text><text id="mct-Chubut" x="128" y="533" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Santa Cruz" onclick="mapaClick('Santa Cruz')" style="cursor:pointer"><path id="mcp-Santa Cruz" d="M42 592 L200 584 L218 602 L224 676 L196 704 L118 710 L56 690 L32 654 L30 618 Z" class="mapa-prov"/><text x="126" y="645" font-family="JetBrains Mono" font-size="6" fill="#60a5fa" text-anchor="middle">SANTA CRUZ</text><text id="mct-Santa Cruz" x="126" y="656" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+            <g id="mcg-Tierra del Fuego" onclick="mapaClick('Tierra del Fuego')" style="cursor:pointer"><path id="mcp-Tierra del Fuego" d="M74 724 L182 716 L198 738 L184 772 L138 784 L86 778 L62 758 L60 738 Z" class="mapa-prov"/><text x="130" y="750" font-family="JetBrains Mono" font-size="5.5" fill="#60a5fa" text-anchor="middle">T.DEL FUEGO</text><text id="mct-Tierra del Fuego" x="130" y="760" font-family="JetBrains Mono" font-size="7" fill="#22d3ee" text-anchor="middle" font-weight="700">0</text></g>
+          </svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;overflow-y:auto">
+          <div class="panel"><div class="panel-hdr"><span class="panel-title">📊 Ranking provincias</span></div><div id="mapaRanking"><div class="empty-state" style="padding:24px"><div class="empty-icon">🗺️</div><div class="empty-title">Sin datos</div></div></div></div>
+          <div class="panel" id="mapaDetalle" style="display:none"><div class="panel-hdr"><span class="panel-title" id="mapaDetalleTitle">—</span></div><div class="panel-body" id="mapaDetalleBody"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VENDEDORES ══ -->
+    <div class="page" id="page-vendedores">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div><div class="sec-title">Equipo de Vendedores</div></div>
+        <button class="btn btn-primary btn-sm">+ Agregar vendedor</button>
+      </div>
+      <div class="grid3">
+        <div class="panel"><div class="panel-body" style="text-align:center;padding:22px">
+          <div style="width:56px;height:56px;border-radius:50%;background:var(--pg);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;margin:0 auto 10px">A</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:3px">Admin</div>
+          <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:10px">Administrador</div>
+          <div class="chip chip-green" style="margin:0 auto">● En línea</div>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bord)">
+            <div class="kpi-row"><span class="kpi-name">Contactos asig.</span><span class="kpi-val" id="v1contacts">0</span></div>
+            <div class="kpi-row"><span class="kpi-name">Ventas hoy</span><span class="kpi-val">$—</span></div>
+          </div>
+        </div></div>
+        <div class="panel" style="border:2px dashed var(--bord2)"><div class="empty-state" style="padding:50px"><div class="empty-icon">➕</div><div class="empty-title">Vendedor 2</div></div></div>
+        <div class="panel" style="border:2px dashed var(--bord2)"><div class="empty-state" style="padding:50px"><div class="empty-icon">➕</div><div class="empty-title">Vendedor 3</div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ REPORTES ══ -->
+    <div class="page" id="page-reportes">
+      <div style="margin-bottom:14px"><div class="sec-title">Reportes y Estadísticas</div></div>
+      <div class="metrics-grid">
+        <div class="metric-card" style="--accent:var(--green)"><div class="mc-label">TASA RESPUESTA</div><div class="mc-value">—%</div></div>
+        <div class="metric-card" style="--accent:var(--p2)"><div class="mc-label">CONVERSIÓN</div><div class="mc-value">—%</div></div>
+        <div class="metric-card" style="--accent:var(--amber)"><div class="mc-label">TICKET PROMEDIO</div><div class="mc-value">$—</div></div>
+        <div class="metric-card" style="--accent:var(--cyan)"><div class="mc-label">LEADS EN PIPELINE</div><div class="mc-value" id="repPipe">0</div></div>
+      </div>
+      <!-- Funnel visual -->
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-hdr"><span class="panel-title">🔽 Funnel de Conversión</span></div>
+        <div class="panel-body">
+          <div id="funnelViz" style="display:flex;flex-direction:column;gap:6px;max-width:600px;margin:0 auto"></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="panel"><div class="empty-state" style="padding:40px"><div class="empty-icon">📊</div><div class="empty-title">Ventas por período</div></div></div>
+        <div class="panel"><div class="empty-state" style="padding:40px"><div class="empty-icon">🥧</div><div class="empty-title">Distribución por medida</div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ TEMPLATES WHATSAPP ══ -->
+    <div class="page" id="page-templates">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div><div class="sec-title">Templates de WhatsApp</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px">Respuestas rápidas y mensajes predefinidos</div></div>
+        <button class="btn btn-primary btn-sm" onclick="addTemplate()">+ Nuevo template</button>
+      </div>
+      <div class="grid3" id="templatesGrid"></div>
+    </div>
+
+    <!-- ══ GOMESCRAPER PRO ══ -->
+    <div class="page" id="page-gomescraper">
+      <div class="gs-layout">
+        <div class="gs-map-area">
+          <div class="gs-toolbar">
+            <span class="gs-tb-label">SELECCIÓN →</span>
+            <button class="gs-mb on" id="gsb-todo" onclick="gsSelGrp('todo',this)">🗺 Todo</button>
+            <button class="gs-mb" id="gsb-bsas" onclick="gsSelGrp('bsas',this)">Bs As+GBA</button>
+            <button class="gs-mb" id="gsb-norte" onclick="gsSelGrp('norte',this)">Norte</button>
+            <button class="gs-mb" id="gsb-centro" onclick="gsSelGrp('centro',this)">Centro</button>
+            <button class="gs-mb" id="gsb-sur" onclick="gsSelGrp('sur',this)">Patagonia</button>
+            <button class="gs-mb" onclick="gsSelGrp('none',null)" style="margin-left:auto">✕</button>
+          </div>
+          <div class="gs-map-canvas">
+            <svg id="gsMapa" viewBox="80 5 420 840" xmlns="http://www.w3.org/2000/svg">
+              <defs><radialGradient id="oceanGrad" cx="50%" cy="50%" r="70%"><stop offset="0%" style="stop-color:#0a1628"/><stop offset="100%" style="stop-color:#050c18"/></radialGradient></defs>
+              <rect x="80" y="5" width="420" height="840" fill="url(#oceanGrad)" rx="12"/>
+              <text x="462" y="380" font-family="JetBrains Mono" font-size="8" fill="#1a3a6e" text-anchor="middle" transform="rotate(90,462,380)">OCÉANO ATLÁNTICO</text>
+              <text x="94" y="490" font-family="JetBrains Mono" font-size="7" fill="#1a3a6e" text-anchor="middle" transform="rotate(-90,94,490)">OCÉ. PACÍFICO</text>
+              <text x="270" y="19" font-family="JetBrains Mono" font-size="7" fill="#0e2040" text-anchor="middle">BOLIVIA</text>
+              <text x="415" y="95" font-family="JetBrains Mono" font-size="7" fill="#0e2040" text-anchor="middle">PARAGUAY</text>
+              <text x="450" y="175" font-family="JetBrains Mono" font-size="6" fill="#0e2040" text-anchor="middle">BRASIL</text>
+              <text x="445" y="245" font-family="JetBrains Mono" font-size="6" fill="#0e2040" text-anchor="middle">URUGUAY</text>
+              <g id="gg-Jujuy" onclick="gsClickProv('Jujuy')" style="cursor:pointer"><path class="ps" id="gps-Jujuy" fill="#112040" d="M183 22 L220 19 L238 36 L232 68 L210 76 L186 70 L172 50 Z"/><text class="plbl" id="gpl-Jujuy" x="205" y="48">JUJUY</text></g>
+              <g id="gg-Salta" onclick="gsClickProv('Salta')" style="cursor:pointer"><path class="ps" id="gps-Salta" fill="#0f1e3a" d="M220 19 L305 15 L325 32 L320 72 L295 84 L258 78 L238 68 L232 36 Z"/><text class="plbl" id="gpl-Salta" x="272" y="48">SALTA</text></g>
+              <g id="gg-Formosa" onclick="gsClickProv('Formosa')" style="cursor:pointer"><path class="ps" id="gps-Formosa" fill="#112040" d="M305 15 L395 12 L415 30 L410 60 L372 66 L325 60 L320 32 Z"/><text class="plbl" id="gpl-Formosa" x="365" y="38">FORMOSA</text></g>
+              <g id="gg-Chaco" onclick="gsClickProv('Chaco')" style="cursor:pointer"><path class="ps" id="gps-Chaco" fill="#0f1e3a" d="M325 60 L368 66 L410 60 L428 80 L422 115 L378 121 L340 113 L326 91 Z"/><text class="plbl" id="gpl-Chaco" x="378" y="90">CHACO</text></g>
+              <g id="gg-Misiones" onclick="gsClickProv('Misiones')" style="cursor:pointer"><path class="ps" id="gps-Misiones" fill="#112040" d="M428 53 L470 48 L486 68 L480 112 L450 120 L428 98 L420 75 Z"/><text class="plbl" id="gpl-Misiones" x="453" y="83">MIS.</text></g>
+              <g id="gg-Tucumán" onclick="gsClickProv('Tucumán')" style="cursor:pointer"><path class="ps" id="gps-Tucumán" fill="#0f1e3a" d="M208 74 L248 71 L260 95 L248 119 L220 117 L204 99 Z"/><text class="plbl" id="gpl-Tucumán" x="232" y="96">TUC.</text></g>
+              <g id="gg-Santiago del Estero" onclick="gsClickProv('Santiago del Estero')" style="cursor:pointer"><path class="ps" id="gps-Santiago del Estero" fill="#112040" d="M248 71 L298 68 L340 84 L344 127 L320 149 L288 155 L258 137 L252 113 L260 95 Z"/><text class="plbl" id="gpl-Santiago del Estero" x="298" y="110">SGO.E.</text></g>
+              <g id="gg-Catamarca" onclick="gsClickProv('Catamarca')" style="cursor:pointer"><path class="ps" id="gps-Catamarca" fill="#0f1e3a" d="M172 72 L208 70 L204 99 L220 118 L202 148 L178 162 L152 147 L148 117 L162 89 Z"/><text class="plbl" id="gpl-Catamarca" x="181" y="120">CAT.</text></g>
+              <g id="gg-La Rioja" onclick="gsClickProv('La Rioja')" style="cursor:pointer"><path class="ps" id="gps-La Rioja" fill="#112040" d="M148 117 L180 111 L202 129 L200 173 L176 191 L146 183 L130 159 L136 135 Z"/><text class="plbl" id="gpl-La Rioja" x="167" y="153">LA RIOJA</text></g>
+              <g id="gg-Corrientes" onclick="gsClickProv('Corrientes')" style="cursor:pointer"><path class="ps" id="gps-Corrientes" fill="#0f1e3a" d="M340 113 L382 107 L448 117 L452 157 L428 184 L382 190 L354 166 L344 139 Z"/><text class="plbl" id="gpl-Corrientes" x="400" y="148">CORRIENTES</text></g>
+              <g id="gg-Entre Ríos" onclick="gsClickProv('Entre Ríos')" style="cursor:pointer"><path class="ps" id="gps-Entre Ríos" fill="#112040" d="M354 166 L398 160 L428 180 L424 220 L396 234 L362 224 L346 200 Z"/><text class="plbl" id="gpl-Entre Ríos" x="390" y="197">E.RÍOS</text></g>
+              <g id="gg-Santa Fe" onclick="gsClickProv('Santa Fe')" style="cursor:pointer"><path class="ps" id="gps-Santa Fe" fill="#0f1e3a" d="M288 146 L344 139 L362 157 L360 226 L332 242 L296 234 L280 206 L282 170 Z"/><text class="plbl" id="gpl-Santa Fe" x="322" y="192">SANTA FE</text></g>
+              <g id="gg-Córdoba" onclick="gsClickProv('Córdoba')" style="cursor:pointer"><path class="ps" id="gps-Córdoba" fill="#112040" d="M198 162 L288 154 L312 170 L316 246 L288 268 L244 274 L208 253 L192 220 L196 182 Z"/><text class="plbl" id="gpl-Córdoba" x="254" y="214">CÓRDOBA</text></g>
+              <g id="gg-San Juan" onclick="gsClickProv('San Juan')" style="cursor:pointer"><path class="ps" id="gps-San Juan" fill="#0f1e3a" d="M118 148 L153 142 L178 158 L176 206 L148 222 L118 212 L103 186 L108 162 Z"/><text class="plbl" id="gpl-San Juan" x="141" y="183">SAN JUAN</text></g>
+              <g id="gg-San Luis" onclick="gsClickProv('San Luis')" style="cursor:pointer"><path class="ps" id="gps-San Luis" fill="#112040" d="M192 198 L228 192 L254 208 L258 257 L230 275 L196 268 L176 248 L180 218 Z"/><text class="plbl" id="gpl-San Luis" x="217" y="235">SAN LUIS</text></g>
+              <g id="gg-Mendoza" onclick="gsClickProv('Mendoza')" style="cursor:pointer"><path class="ps" id="gps-Mendoza" fill="#0f1e3a" d="M98 186 L132 176 L156 194 L176 242 L164 290 L132 306 L102 290 L86 260 L86 214 Z"/><text class="plbl" id="gpl-Mendoza" x="128" y="243">MENDOZA</text></g>
+              <g id="gg-Buenos Aires" onclick="gsClickProv('Buenos Aires')" style="cursor:pointer"><path class="ps" id="gps-Buenos Aires" fill="#112040" d="M248 256 L336 248 L402 260 L432 294 L444 352 L432 414 L398 456 L348 478 L296 480 L252 456 L220 414 L206 366 L210 310 L228 275 Z"/><text class="plbl" id="gpl-Buenos Aires" x="328" y="370">BUENOS AIRES</text></g>
+              <g id="gg-CABA" onclick="gsClickProv('CABA')" style="cursor:pointer"><path class="ps" id="gps-CABA" fill="#0f1e3a" style="stroke-width:1.5" d="M315 303 L336 298 L344 314 L330 324 L312 320 Z"/><text class="plbl" id="gpl-CABA" x="328" y="311" style="font-size:5.5px">CABA</text></g>
+              <g id="gg-La Pampa" onclick="gsClickProv('La Pampa')" style="cursor:pointer"><path class="ps" id="gps-La Pampa" fill="#0f1e3a" d="M174 265 L254 258 L248 334 L238 396 L204 412 L166 396 L146 354 L150 300 Z"/><text class="plbl" id="gpl-La Pampa" x="198" y="340">LA PAMPA</text></g>
+              <g id="gg-Neuquén" onclick="gsClickProv('Neuquén')" style="cursor:pointer"><path class="ps" id="gps-Neuquén" fill="#112040" d="M86 290 L128 282 L150 302 L153 354 L128 388 L96 394 L70 366 L68 324 Z"/><text class="plbl" id="gpl-Neuquén" x="111" y="338">NQN</text></g>
+              <g id="gg-Río Negro" onclick="gsClickProv('Río Negro')" style="cursor:pointer"><path class="ps" id="gps-Río Negro" fill="#0f1e3a" d="M68 394 L148 386 L240 398 L252 436 L228 466 L180 480 L126 480 L78 463 L54 432 L56 410 Z"/><text class="plbl" id="gpl-Río Negro" x="157" y="432">RÍO NEGRO</text></g>
+              <g id="gg-Chubut" onclick="gsClickProv('Chubut')" style="cursor:pointer"><path class="ps" id="gps-Chubut" fill="#112040" d="M54 476 L188 468 L208 486 L212 552 L190 580 L128 586 L68 568 L42 534 L42 500 Z"/><text class="plbl" id="gpl-Chubut" x="128" y="524">CHUBUT</text></g>
+              <g id="gg-Santa Cruz" onclick="gsClickProv('Santa Cruz')" style="cursor:pointer"><path class="ps" id="gps-Santa Cruz" fill="#0f1e3a" d="M42 592 L200 584 L218 602 L224 676 L196 704 L118 710 L56 690 L32 654 L30 618 Z"/><text class="plbl" id="gpl-Santa Cruz" x="126" y="645">SANTA CRUZ</text></g>
+              <g id="gg-Tierra del Fuego" onclick="gsClickProv('Tierra del Fuego')" style="cursor:pointer"><path class="ps" id="gps-Tierra del Fuego" fill="#112040" d="M74 724 L182 716 L198 738 L184 772 L138 784 L86 778 L62 758 L60 738 Z"/><text class="plbl" id="gpl-Tierra del Fuego" x="130" y="750">T.DEL FUEGO</text></g>
+              <ellipse cx="375" cy="685" rx="16" ry="11" fill="#0a1628" stroke="#1a3a6e" stroke-width=".8"/><text x="375" y="689" font-family="JetBrains Mono" font-size="5.5" fill="#1e3a6e" text-anchor="middle">MALVINAS</text>
+            </svg>
+            <div class="gs-badge" id="gsCnt"><div class="gc-n" id="gsSelN">24</div><div class="gc-l">EN COLA</div></div>
+            <div class="gs-badge" id="gsLeg">
+              <div class="gl-r"><div class="gl-s" style="background:#1d4ed8;border:1.5px solid #3b82f6"></div>Seleccionada</div>
+              <div class="gl-r"><div class="gl-s" style="background:#065f46;border:1.5px solid #10b981"></div>Scrapeando</div>
+              <div class="gl-r"><div class="gl-s" style="background:#064e3b;border:1.5px solid #10b981"></div>Completada</div>
+              <div class="gl-r"><div class="gl-s" style="background:#450a0a;border:1.5px solid #ef4444"></div>Sin resultados</div>
+            </div>
+          </div>
+        </div>
+        <div class="gs-right">
+          <div class="gs-key-bar">
+            <span class="gs-klbl">API KEY</span>
+            <div class="gs-kwrap"><input class="gs-kin" id="gsApiKey" type="password" placeholder="AIzaSy... — Places API" oninput="gsOnKey(this.value)" spellcheck="false" autocomplete="off"></div>
+            <span class="gs-kpill" id="gsKpill">SIN KEY</span>
+            <a class="gs-ka" href="https://console.cloud.google.com" target="_blank">↗</a>
+          </div>
+          <div class="gs-stats">
+            <div class="gs-stat"><div class="gs-stat-n" id="gsHT">0</div><div class="gs-stat-l">TOTAL</div></div>
+            <div class="gs-stat"><div class="gs-stat-n" id="gsHP">0</div><div class="gs-stat-l">CON TEL.</div></div>
+            <div class="gs-stat"><div class="gs-stat-n" id="gsHW">0</div><div class="gs-stat-l">CON WEB</div></div>
+            <div class="gs-stat"><div class="gs-stat-n" id="gsHR">0</div><div class="gs-stat-l">RATING</div></div>
+          </div>
+          <div class="gs-qhdr">
+            <span class="gs-qtitle">COLA DE PROVINCIAS</span>
+            <div class="gs-qbtns">
+              <button class="gs-qb" onclick="gsSelGrp('todo',null)">+Todas</button>
+              <button class="gs-qb" onclick="gsClearAll()">✕</button>
+              <button class="gs-qb run" id="gsRunBtn" onclick="gsStartRun()" disabled>▶ INICIAR</button>
+              <button class="gs-qb pause" id="gsPauseBtn" onclick="gsTogPause()" style="display:none">⏸</button>
+            </div>
+          </div>
+          <div class="gs-qlist" id="gsQList"><div class="gs-qempty">Seleccioná provincias en el mapa</div></div>
+          <div class="gs-prg" id="gsPrgSec" style="display:none">
+            <div class="gs-prg-row"><span class="gs-prg-lbl" id="gsPrgTxt">—</span><span class="gs-prg-pct" id="gsPrgPct">0%</span></div>
+            <div class="gs-prg-track"><div class="gs-prg-fill" id="gsPrgFill"></div></div>
+            <div class="gs-prg-sub" id="gsPrgSub">—</div>
+            <div class="gs-pause-banner" id="gsPauseBanner">⏸ PAUSADO — Presioná REANUDAR</div>
+          </div>
+          <div class="gs-tabs">
+            <div class="gs-tab on" id="gsTLog" onclick="gsSw('Log')">📋 LOG EN VIVO</div>
+            <div class="gs-tab" id="gsTRes" onclick="gsSw('Res')">📍 RESULTADOS <span id="gsRCnt" style="color:var(--cyan)"></span></div>
+          </div>
+          <div class="gs-tc on" id="gsTcLog">
+            <div class="gs-log" id="gsLogEl">
+              <div class="gs-ll"><span class="gs-lt">--:--:--</span>GomeScraper PRO — Prospección B2B Argentina.</div>
+              <div class="gs-ll w"><span class="gs-lt">--:--:--</span>Abrí este archivo en Chrome de PC para que funcione correctamente.</div>
+              <div class="gs-ll"><span class="gs-lt">--:--:--</span>Ingresá tu Google Places API Key y seleccioná provincias.</div>
+            </div>
+          </div>
+          <div class="gs-tc" id="gsTcRes"><div class="gs-results" id="gsResEl"><div style="padding:16px;text-align:center;font-family:var(--mono);font-size:8px;color:var(--text3)">Los resultados aparecen aquí en tiempo real</div></div></div>
+          <div class="gs-dl">
+            <button class="gs-dl-btn" id="gsDlBtn" onclick="gsDl()" disabled>⬇ DESCARGAR EXCEL (.csv)</button>
+            <button class="gs-crm-btn" id="gsCrmBtn" onclick="gsImportCRM()" disabled>→ CRM</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONFIGURACIÓN ══ -->
+    <div class="page" id="page-configuracion">
+      <div style="margin-bottom:14px"><div class="sec-title">Configuración del Sistema</div></div>
+      <div class="grid2">
+        <div>
+          <!-- SUPABASE -->
+          <div class="panel" style="margin-bottom:12px">
+            <div class="panel-hdr"><span class="panel-title">🗄️ Supabase — Base de Datos</span><span id="supaBadge" class="chip chip-amber">Sin conectar</span></div>
+            <div class="panel-body">
+              <div class="form-group"><label class="form-label">PROJECT URL</label><input class="form-input" id="supaUrl" placeholder="https://xxxx.supabase.co" oninput="saveCfg()"></div>
+              <div class="form-group"><label class="form-label">ANON PUBLIC KEY</label><input class="form-input" id="supaKey" type="password" placeholder="eyJhbGc..." oninput="saveCfg()"></div>
+              <button class="btn btn-primary btn-sm" onclick="testSupabase()">🔌 Conectar y probar</button>
+              <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:8px;line-height:1.7">
+                Gratis en supabase.com → Crear proyecto → Settings → API → copiar URL y anon key.
+              </div>
+            </div>
+          </div>
+          <!-- WHATSAPP -->
+          <div class="panel" style="margin-bottom:12px">
+            <div class="panel-hdr"><span class="panel-title">📱 WhatsApp — Evolution API</span></div>
+            <div class="panel-body">
+              <div class="form-group"><label class="form-label">URL EVOLUTION API</label><input class="form-input" id="evoUrl" placeholder="https://tu-servidor.com:8080" oninput="saveCfg()"></div>
+              <div class="form-group"><label class="form-label">API KEY</label><input class="form-input" id="evoKey" type="password" placeholder="evo_key_..." oninput="saveCfg()"></div>
+              <div class="form-group"><label class="form-label">NÚMERO DE WHATSAPP</label><input class="form-input" id="waNumber" placeholder="+54 9 11 XXXX-XXXX" oninput="saveCfg()"></div>
+              <button class="btn btn-primary btn-sm">📲 Conectar WhatsApp</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <!-- GEMINI -->
+          <div class="panel" style="margin-bottom:12px">
+            <div class="panel-hdr"><span class="panel-title">🤖 IA — Gemini Flash</span></div>
+            <div class="panel-body">
+              <div class="form-group"><label class="form-label">GOOGLE AI API KEY</label><input class="form-input" id="geminiKey" type="password" placeholder="AIzaSy..." oninput="saveCfg()"></div>
+              <div class="form-group"><label class="form-label">MODELO</label><select class="form-select" id="geminiModel" onchange="saveCfg()"><option value="gemini-1.5-flash">gemini-1.5-flash</option><option value="gemini-1.5-pro">gemini-1.5-pro</option></select></div>
+              <button class="btn btn-primary btn-sm">🧠 Probar IA</button>
+            </div>
+          </div>
+          <!-- MERCADO PAGO -->
+          <div class="panel" style="margin-bottom:12px">
+            <div class="panel-hdr"><span class="panel-title">💳 Mercado Pago</span></div>
+            <div class="panel-body">
+              <div class="form-group"><label class="form-label">ACCESS TOKEN</label><input class="form-input" id="mpToken" type="password" placeholder="APP_USR-..." oninput="saveCfg()"></div>
+              <button class="btn btn-primary btn-sm">💳 Conectar MP</button>
+            </div>
+          </div>
+          <!-- SEGURIDAD -->
+          <div class="panel">
+            <div class="panel-hdr"><span class="panel-title">🔐 Seguridad — Credenciales</span></div>
+            <div class="panel-body">
+              <div class="form-group"><label class="form-label">USUARIO</label><input class="form-input" id="cfgUser" placeholder="admin" oninput="saveCfg()"></div>
+              <div class="form-group"><label class="form-label">CONTRASEÑA</label><input class="form-input" id="cfgPass" type="password" placeholder="Nueva contraseña" oninput="saveCfg()"></div>
+              <button class="btn btn-primary btn-sm" onclick="saveCfg();addNotif('✅','Credenciales guardadas')">💾 Guardar credenciales</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  CONFIG — SUPABASE (pegá acá tus credenciales)
+// ══════════════════════════════════════════════════════════════
+let CFG = {
+  supaUrl:  localStorage.getItem('supaUrl')  || '',
+  supaKey:  localStorage.getItem('supaKey')  || '',
+  evoUrl:   localStorage.getItem('evoUrl')   || '',
+  evoKey:   localStorage.getItem('evoKey')   || '',
+  waNumber: localStorage.getItem('waNumber') || '',
+  geminiKey:localStorage.getItem('geminiKey')|| '',
+  user:     localStorage.getItem('cfgUser')  || 'admin',
+  pass:     localStorage.getItem('cfgPass')  || 'admin123',
+};
+
+// ══════════════════════════════════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════════════════════════════════
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if (u === CFG.user && p === CFG.pass) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('sidebar').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'flex';
+    document.getElementById('userAvatar').textContent = u[0].toUpperCase();
+    document.getElementById('userName').textContent = u;
+    document.getElementById('topAvatar').textContent = u[0].toUpperCase();
+    document.getElementById('topName').textContent = u;
+    initApp();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('loginPass').value = '';
+  }
+}
+function doLogout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('sidebar').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') doLogin();
+});
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+function initApp() {
+  loadCfgFields();
+  renderKanban();
+  renderTemplates();
+  renderFunnel();
+  updateDashboard();
+  // Restore config from localStorage
+  if (CFG.supaUrl) document.getElementById('supaUrl').value = CFG.supaUrl;
+  if (CFG.supaKey) document.getElementById('supaKey').value = CFG.supaKey;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  NAVEGACIÓN
+// ══════════════════════════════════════════════════════════════
+const PAGE_META = {
+  dashboard:     {title:'Dashboard',              sub:'/ Vista general'},
+  conversaciones:{title:'Conversaciones',          sub:'/ WhatsApp activas'},
+  contactos:     {title:'Contactos / CRM',         sub:'/ Base de clientes'},
+  pedidos:       {title:'Pedidos',                 sub:'/ Gestión de órdenes'},
+  productos:     {title:'Productos',               sub:'/ Catálogo y stock'},
+  cotizador:     {title:'Cotizador',               sub:'/ Precios y cuotas'},
+  promociones:   {title:'Promociones',             sub:'/ Campañas activas'},
+  envios:        {title:'Envíos',                  sub:'/ Logística'},
+  pipeline:      {title:'Pipeline de Ventas',      sub:'/ Kanban comercial'},
+  campanas:      {title:'Campañas WhatsApp',       sub:'/ Mensajes masivos'},
+  seguimiento:   {title:'Seguimiento Automático',  sub:'/ Recordatorios'},
+  mapa_clientes: {title:'Mapa de Clientes',        sub:'/ Distribución geográfica'},
+  vendedores:    {title:'Vendedores',              sub:'/ Equipo comercial'},
+  reportes:      {title:'Reportes',               sub:'/ Métricas y estadísticas'},
+  templates:     {title:'Templates WhatsApp',      sub:'/ Respuestas rápidas'},
+  gomescraper:   {title:'GomeScraper PRO',         sub:'/ Prospección B2B Argentina'},
+  configuracion: {title:'Configuración',           sub:'/ Sistema y conexiones'},
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id)?.classList.add('active');
+  const meta = PAGE_META[id] || {};
+  document.getElementById('pageTitle').textContent = meta.title || id;
+  document.getElementById('pageSub').textContent   = meta.sub   || '';
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes("'" + id + "'")) n.classList.add('active');
+  });
+  if (id === 'mapa_clientes') updateMapaClientes();
+  if (id === 'seguimiento')   updateSegStats();
+  if (id === 'reportes')      renderFunnel();
+  if (id === 'gomescraper' && !gsInited) gsInit();
+  document.getElementById('notifPanel').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SUPABASE
+// ══════════════════════════════════════════════════════════════
+function supaFetch(path, opts = {}) {
+  if (!CFG.supaUrl || !CFG.supaKey) return Promise.reject('No configurado');
+  return fetch(`${CFG.supaUrl}/rest/v1/${path}`, {
+    headers: {
+      'apikey': CFG.supaKey,
+      'Authorization': `Bearer ${CFG.supaKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
+      ...opts.headers,
+    },
+    ...opts,
+  });
+}
+
+async function testSupabase() {
+  const url = document.getElementById('supaUrl').value.trim();
+  const key = document.getElementById('supaKey').value.trim();
+  if (!url || !key) { alert('Pegá la URL y la Key de Supabase.'); return; }
+  CFG.supaUrl = url; CFG.supaKey = key;
+  localStorage.setItem('supaUrl', url); localStorage.setItem('supaKey', key);
+  try {
+    const r = await fetch(`${url}/rest/v1/contactos?select=id&limit=1`, {
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+    });
+    if (r.ok) {
+      setDbStatus(true);
+      addNotif('✅', 'Supabase conectado correctamente. Los datos se sincronizarán en la nube.');
+      alert('✅ ¡Conectado! Supabase funcionando. Los datos de contactos, pipeline y campañas se guardarán automáticamente.');
+    } else {
+      const err = await r.text();
+      setDbStatus(false);
+      alert('❌ Error: ' + err + '\n\nVerificá que hayas ejecutado el SQL para crear las tablas en Supabase.');
+    }
+  } catch(e) {
+    setDbStatus(false);
+    alert('❌ No se pudo conectar: ' + e.message);
+  }
+}
+
+function setDbStatus(ok) {
+  const el = document.getElementById('dbStatus');
+  const txt = document.getElementById('dbStatusText');
+  const sys = document.getElementById('sysDb');
+  const badge = document.getElementById('supaBadge');
+  el.className = 'sb-db ' + (ok ? 'connected' : 'disconnected');
+  txt.textContent = ok ? 'Supabase conectado' : 'Sin conexión a BD';
+  if (sys) sys.textContent = ok ? '✅ Conectado' : 'Sin conectar';
+  if (badge) { badge.className = ok ? 'chip chip-green' : 'chip chip-amber'; badge.textContent = ok ? 'Conectado' : 'Sin conectar'; }
+}
+
+async function saveToSupabase(table, data) {
+  if (!CFG.supaUrl || !CFG.supaKey) return false;
+  try {
+    const r = await supaFetch(table, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+async function loadFromSupabase(table) {
+  if (!CFG.supaUrl || !CFG.supaKey) return null;
+  try {
+    const r = await supaFetch(`${table}?select=*&order=created_at.desc`);
+    if (r.ok) return r.json();
+  } catch {}
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════════════
+function saveCfg() {
+  ['supaUrl','supaKey','evoUrl','evoKey','waNumber','geminiKey','cfgUser','cfgPass'].forEach(k => {
+    const el = document.getElementById(k);
+    if (el) {
+      localStorage.setItem(k, el.value);
+      if (k === 'supaUrl') CFG.supaUrl = el.value;
+      if (k === 'supaKey') CFG.supaKey = el.value;
+      if (k === 'cfgUser') CFG.user    = el.value;
+      if (k === 'cfgPass') CFG.pass    = el.value;
+    }
+  });
+}
+
+function loadCfgFields() {
+  ['supaUrl','supaKey','evoUrl','evoKey','waNumber','geminiKey','cfgUser','cfgPass'].forEach(k => {
+    const el = document.getElementById(k);
+    const val = localStorage.getItem(k) || '';
+    if (el && val) el.value = val;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  NOTIFICACIONES
+// ══════════════════════════════════════════════════════════════
+let notifications = [];
+function addNotif(icon, text) {
+  notifications.unshift({ icon, text, time: new Date().toLocaleTimeString('es-AR') });
+  document.getElementById('notifDot').style.display = 'block';
+  renderNotifs();
+}
+function renderNotifs() {
+  const el = document.getElementById('notifList');
+  if (!notifications.length) { el.innerHTML = '<div class="notif-empty">Sin notificaciones</div>'; return; }
+  el.innerHTML = notifications.slice(0, 10).map(n => `
+    <div class="notif-item">
+      <div class="notif-icon">${n.icon}</div>
+      <div><div class="notif-text">${n.text}</div><div class="notif-time">${n.time}</div></div>
+    </div>`).join('');
+}
+function toggleNotif() {
+  const p = document.getElementById('notifPanel');
+  p.style.display = p.style.display === 'block' ? 'none' : 'block';
+  if (p.style.display === 'block') {
+    document.getElementById('notifDot').style.display = 'none';
+    renderNotifs();
+  }
+}
+function clearNotifs() { notifications = []; renderNotifs(); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('.tb-btn') && !e.target.closest('.notif-panel'))
+    document.getElementById('notifPanel').style.display = 'none';
+});
+
+// ══════════════════════════════════════════════════════════════
+//  MODALES
+// ══════════════════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id)?.classList.add('show') }
+function closeModal(id) { document.getElementById(id)?.classList.remove('show') }
+
+// ══════════════════════════════════════════════════════════════
+//  CONTACTOS — IMPORTADOR
+// ══════════════════════════════════════════════════════════════
+let allContacts = [], filteredContacts = [], pendingImport = [];
+let pageSize = 50, currentPage = 1, activeTag = '';
+
+function backToStep1() {
+  document.getElementById('impStep1').style.display = 'block';
+  document.getElementById('impStep2').style.display = 'none';
+  document.getElementById('impStep3').style.display = 'none';
+  document.getElementById('impBtnBack').style.display = 'none';
+  document.getElementById('impBtnConfirm').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').style.borderColor = 'var(--bord2)';
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const reader = new FileReader();
+  if (ext === 'csv') {
+    reader.onload = e => processCSV(e.target.result);
+    reader.readAsText(file, 'UTF-8');
+  } else {
+    alert('Para Excel (.xlsx), primero guardalo como CSV desde Excel: Archivo → Guardar como → CSV UTF-8');
+  }
+}
+
+function processCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { alert('Archivo vacío o sin datos.'); return; }
+  const headers = parseCSVLine(lines[0]);
+  const rows = lines.slice(1).map(l => {
+    const vals = parseCSVLine(l);
+    const row = {};
+    headers.forEach((h, i) => row[h] = (vals[i] || '').trim());
+    return row;
+  }).filter(r => Object.values(r).some(v => v));
+  analyzeData(headers, rows);
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (const ch of line) {
+    if (ch === '"') inQ = !inQ;
+    else if ((ch === ',' || ch === ';') && !inQ) { result.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  result.push(cur);
+  return result.map(s => s.replace(/^"|"$/g, '').trim());
+}
+
+function detectCol(headers, kws) {
+  const low = headers.map(h => h.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+  for (const kw of kws) {
+    const i = low.findIndex(h => h.includes(kw));
+    if (i >= 0) return headers[i];
+  }
+  return headers[0] || '';
+}
+
+function normalizePhone(raw) {
+  if (!raw) return '';
+  let p = String(raw).replace(/[\s\-\.\(\)]/g, '');
+  p = p.replace(/^\+54/, '').replace(/^0054/, '');
+  if (p.startsWith('0')) p = p.slice(1);
+  if (p.startsWith('9') && p.length === 10) return '+54 ' + p;
+  if (p.length === 10) return '+54 9' + p.slice(1);
+  return raw;
+}
+
+function analyzeData(headers, rows) {
+  const cN = detectCol(headers, ['nombre','name','cliente','razon','contact']);
+  const cT = detectCol(headers, ['telefono','tel','phone','celular','movil','whatsapp']);
+  const cD = detectCol(headers, ['direccion','domicilio','address','calle']);
+  const cP = detectCol(headers, ['provincia','prov','region','localidad']);
+
+  const existing = new Set(allContacts.map(c => c.telefono?.replace(/\D/g, '')));
+  let valid = 0, dupes = 0, errors = 0;
+  pendingImport = [];
+
+  for (const row of rows) {
+    const nombre = row[cN] || '';
+    const rawTel = row[cT] || '';
+    const tel = normalizePhone(rawTel);
+    const dig = tel.replace(/\D/g, '');
+    const dir = row[cD] || '';
+    const prov = row[cP] || '';
+    if (!rawTel || rawTel.replace(/\D/g, '').length < 6) { errors++; continue; }
+    if (existing.has(dig)) { dupes++; continue; }
+    existing.add(dig);
+    valid++;
+    pendingImport.push({ nombre, telefono: tel, direccion: dir, provincia: prov, estado: 'Activo', fuente: 'Importado', etiquetas: [], notas: '' });
+  }
+
+  document.getElementById('impTotal').textContent  = rows.length.toLocaleString('es-AR');
+  document.getElementById('impValid').textContent  = valid.toLocaleString('es-AR');
+  document.getElementById('impDupes').textContent  = dupes.toLocaleString('es-AR');
+  document.getElementById('impErrors').textContent = errors.toLocaleString('es-AR');
+
+  const pt = document.getElementById('previewTable');
+  pt.innerHTML = `<thead><tr><th>NOMBRE</th><th>TELÉFONO</th><th>DIRECCIÓN</th><th>PROVINCIA</th><th>ESTADO</th></tr></thead>
+    <tbody>${pendingImport.slice(0,5).map(c=>`<tr><td class="td-main">${c.nombre||'—'}</td><td class="td-mono">${c.telefono}</td><td>${c.direccion||'—'}</td><td>${c.provincia||'—'}</td><td><span class="chip chip-green">Activo</span></td></tr>`).join('')}</tbody>`;
+
+  document.getElementById('impStep1').style.display = 'none';
+  document.getElementById('impStep2').style.display = 'block';
+  document.getElementById('impBtnBack').style.display = 'inline-flex';
+  document.getElementById('impBtnConfirm').style.display = 'inline-flex';
+}
+
+async function confirmImport() {
+  allContacts = [...allContacts, ...pendingImport];
+  const n = pendingImport.length;
+
+  // Guardar en Supabase si está conectado
+  if (CFG.supaUrl && CFG.supaKey) {
+    const batch = pendingImport.slice(0, 500); // batch de 500
+    await saveToSupabase('contactos', batch);
+    addNotif('☁️', `${n.toLocaleString('es-AR')} contactos guardados en Supabase`);
+  }
+
+  pendingImport = [];
+  document.getElementById('impStep2').style.display = 'none';
+  document.getElementById('impStep3').style.display = 'block';
+  document.getElementById('impBtnBack').style.display = 'none';
+  document.getElementById('impBtnConfirm').style.display = 'none';
+  document.getElementById('impResultMsg').textContent = `✅ ${n.toLocaleString('es-AR')} contactos importados. Total en CRM: ${allContacts.length.toLocaleString('es-AR')}`;
+
+  filterContacts();
+  updateDashboard();
+  updateSegStats();
+  updateMapaClientes();
+  addNotif('👥', `${n.toLocaleString('es-AR')} contactos importados correctamente`);
+}
+
+function filterContacts() {
+  const s = (document.getElementById('contactSearch')?.value || '').toLowerCase();
+  const p = document.getElementById('filterProv')?.value || '';
+  const e = document.getElementById('filterEstado')?.value || '';
+
+  filteredContacts = allContacts.filter(c => {
+    const ms = !s || (c.nombre||'').toLowerCase().includes(s) || (c.telefono||'').includes(s);
+    const mp = !p || c.provincia === p;
+    const me = !e || c.estado === e;
+    const mt = !activeTag || (c.etiquetas||[]).includes(activeTag);
+    return ms && mp && me && mt;
+  });
+  currentPage = 1;
+  document.getElementById('showingCount').textContent = filteredContacts.length.toLocaleString('es-AR');
+  document.getElementById('totalCount').textContent   = allContacts.length.toLocaleString('es-AR');
+  renderPage();
+}
+
+function filterByTag(tag) {
+  activeTag = activeTag === tag ? '' : tag;
+  filterContacts();
+}
+
+function renderPage() {
+  const tbody = document.getElementById('contactsTbody');
+  const tot = Math.max(1, Math.ceil(filteredContacts.length / pageSize));
+  document.getElementById('curPage').textContent = currentPage;
+  document.getElementById('totPages').textContent = tot.toLocaleString('es-AR');
+
+  const slice = filteredContacts.slice((currentPage-1)*pageSize, currentPage*pageSize);
+  if (!slice.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state" style="padding:36px"><div class="empty-icon">🔍</div><div class="empty-title">Sin resultados</div></div></td></tr>`;
+    return;
+  }
+  const chipMap = { 'Activo':'chip-green','Frío':'chip-amber','Perdido':'chip-red','Lead':'chip-blue' };
+  const tagMap  = { 'VIP':'tag-vip','Gomería':'tag-gomeria','Taller':'tag-taller','Mayorista':'tag-mayorista','Minorista':'tag-minorista' };
+  tbody.innerHTML = slice.map((c,i) => `<tr>
+    <td><input type="checkbox" style="accent-color:var(--p2)"></td>
+    <td class="td-main" style="cursor:pointer" onclick="show360(${allContacts.indexOf(c)})">${c.nombre||'—'}</td>
+    <td class="td-mono">${c.telefono||'—'}</td>
+    <td>${c.provincia||'—'}</td>
+    <td>${(c.etiquetas||[]).map(t=>`<span class="tag ${tagMap[t]||'tag-add'}">${t}</span>`).join('')}<span class="tag tag-add" onclick="addTag(${allContacts.indexOf(c)})">+</span></td>
+    <td><span class="chip ${chipMap[c.estado]||'chip-blue'}">${c.estado||'—'}</span></td>
+    <td style="font-family:var(--mono);font-size:8px;color:var(--text3)">${c.fuente||'Manual'}</td>
+    <td style="display:flex;gap:3px">
+      <button class="btn btn-secondary btn-sm" style="padding:3px 6px;font-size:9px" onclick="sendWA('${c.telefono}')">💬</button>
+      <button class="btn btn-secondary btn-sm" style="padding:3px 6px;font-size:9px" onclick="show360(${allContacts.indexOf(c)})">👁</button>
+    </td>
+  </tr>`).join('');
+}
+
+function changePage(dir) {
+  const tot = Math.ceil(filteredContacts.length / pageSize);
+  currentPage = Math.max(1, Math.min(tot, currentPage + dir));
+  renderPage();
+}
+function setPageSize(n) { pageSize = n; currentPage = 1; renderPage(); }
+function toggleSelectAll(cb) { document.querySelectorAll('#contactsTbody input[type=checkbox]').forEach(c => c.checked = cb.checked); }
+function sendWA(tel) { const c = tel.replace(/\D/g,''); window.open(`https://wa.me/${c}`, '_blank'); }
+
+function addTag(idx) {
+  const tags = ['VIP','Gomería','Taller','Mayorista','Minorista','Lead'];
+  const t = prompt('Agregar etiqueta:\n' + tags.join(', '));
+  if (!t) return;
+  if (!allContacts[idx].etiquetas) allContacts[idx].etiquetas = [];
+  if (!allContacts[idx].etiquetas.includes(t)) allContacts[idx].etiquetas.push(t);
+  renderPage();
+}
+
+// ══ HISTORIAL 360° ══
+function show360(idx) {
+  const c = allContacts[idx];
+  if (!c) return;
+  document.getElementById('c360Name').textContent = c.nombre || 'Sin nombre';
+  document.getElementById('c360Tel').textContent  = c.telefono || '—';
+  const body = document.getElementById('c360Body');
+  const tags = (c.etiquetas||[]).map(t=>`<span class="tag tag-vip">${t}</span>`).join('') || 'Sin etiquetas';
+  body.innerHTML = `
+    <div class="grid3" style="margin-bottom:14px">
+      <div class="metric-card" style="--accent:var(--p2)"><div class="mc-label">PROVINCIA</div><div style="font-size:16px;font-weight:700;margin-top:6px">${c.provincia||'—'}</div></div>
+      <div class="metric-card" style="--accent:var(--green)"><div class="mc-label">ESTADO</div><div style="font-size:16px;font-weight:700;margin-top:6px;color:var(--green2)">${c.estado||'—'}</div></div>
+      <div class="metric-card" style="--accent:var(--amber)"><div class="mc-label">FUENTE</div><div style="font-size:14px;font-weight:700;margin-top:6px">${c.fuente||'Manual'}</div></div>
+    </div>
+    <div class="grid2">
+      <div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;margin-bottom:8px">INFORMACIÓN</div>
+        <div class="panel"><div class="panel-body">
+          <div class="kpi-row"><span class="kpi-name">Teléfono</span><span class="kpi-val">${c.telefono||'—'}</span></div>
+          <div class="kpi-row"><span class="kpi-name">Dirección</span><span class="kpi-val" style="font-size:10px">${c.direccion||'—'}</span></div>
+          <div class="kpi-row" style="border:none"><span class="kpi-name">Etiquetas</span><span>${tags}</span></div>
+        </div></div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;margin:12px 0 8px">NOTAS</div>
+        <textarea class="form-input" rows="3" placeholder="Agregar nota sobre este cliente..." oninput="allContacts[${idx}].notas=this.value" style="resize:vertical">${c.notas||''}</textarea>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <button class="btn btn-primary btn-sm" onclick="sendWA('${c.telefono}')">💬 Enviar WhatsApp</button>
+          <button class="btn btn-secondary btn-sm" onclick="addToPipeline(${idx})">🎯 Agregar al pipeline</button>
+          <select class="form-select" style="height:30px;font-size:10px;padding:4px 8px" onchange="allContacts[${idx}].estado=this.value;renderPage()">
+            <option>Activo</option><option>Frío</option><option>Perdido</option><option>Lead</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;margin-bottom:8px">HISTORIAL DE ACTIVIDAD</div>
+        <div class="panel">
+          <div style="padding:12px 14px;border-bottom:1px solid var(--bord);display:flex;align-items:center;gap:8px">
+            <span style="font-size:14px">📥</span>
+            <div><div style="font-size:11px;font-weight:600">Contacto importado</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3)">Fuente: ${c.fuente||'Manual'}</div></div>
+          </div>
+          <div class="empty-state" style="padding:24px">
+            <div class="empty-icon" style="font-size:24px">📋</div>
+            <div class="empty-title" style="font-size:11px">Sin más actividad</div>
+            <div class="empty-sub">Las conversaciones y pedidos<br>aparecerán aquí automáticamente</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  openModal('contact360Modal');
+}
+
+function addToPipeline(idx) {
+  const c = allContacts[idx];
+  PIPE_COLS[0].cards.push({ id: Date.now().toString(), nombre: c.nombre||'Sin nombre', tel: c.telefono||'', nota: c.provincia||'' });
+  renderKanban();
+  closeModal('contact360Modal');
+  addNotif('🎯', `${c.nombre} agregado al pipeline`);
+}
+
+function exportContacts() {
+  if (!allContacts.length) { alert('Sin contactos.'); return; }
+  const BOM = '\uFEFF';
+  const h = ['Nombre','Teléfono','Dirección','Provincia','Estado','Etiquetas','Fuente'];
+  const rows = allContacts.map(c => [c.nombre,c.telefono,c.direccion,c.provincia,c.estado,(c.etiquetas||[]).join('|'),c.fuente]);
+  const csv = BOM + [h,...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `contactos_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PIPELINE KANBAN
+// ══════════════════════════════════════════════════════════════
+const PIPE_COLS = [
+  { id:'nuevo',      label:'🆕 Nuevo',      color:'var(--p2)',     cards:[] },
+  { id:'contactado', label:'💬 Contactado', color:'var(--cyan)',   cards:[] },
+  { id:'cotizado',   label:'💰 Cotizado',   color:'var(--amber)',  cards:[] },
+  { id:'negociando', label:'🤝 Negociando', color:'var(--purple)', cards:[] },
+  { id:'cerrado',    label:'✅ Cerrado',    color:'var(--green)',  cards:[] },
+  { id:'perdido',    label:'❌ Perdido',    color:'var(--red)',    cards:[] },
+];
+
+function renderKanban() {
+  const board = document.getElementById('kanbanBoard');
+  if (!board) return;
+  const total = PIPE_COLS.reduce((a,c) => a + c.cards.length, 0);
+  const el = document.getElementById('pipeTotal');
+  if (el) el.textContent = total;
+  const rp = document.getElementById('repPipe');
+  if (rp) rp.textContent = total;
+
+  board.innerHTML = PIPE_COLS.map(col => `
+    <div class="kan-col">
+      <div class="kan-col-hdr" style="border-top:3px solid ${col.color}">
+        <div class="kan-col-title">${col.label}</div>
+        <div class="kan-col-count">${col.cards.length} leads</div>
+      </div>
+      <div class="kan-cards" id="kancol-${col.id}" ondragover="event.preventDefault()" ondrop="dropCard(event,'${col.id}')">
+        ${col.cards.map(card => `
+          <div class="kan-card" draggable="true" ondragstart="dragCard(event,'${col.id}','${card.id}')">
+            <div class="kan-card-name">${card.nombre}</div>
+            <div class="kan-card-tel">${card.tel}</div>
+            ${card.nota ? `<div class="kan-card-nota">${card.nota}</div>` : ''}
+            <div class="kan-card-btns">
+              <button class="kan-btn kan-btn-wa" onclick="sendWA('${card.tel}')">💬 WA</button>
+              <button class="kan-btn kan-btn-del" onclick="delPipeCard('${col.id}','${card.id}')">✕</button>
+            </div>
+          </div>`).join('')}
+        <button class="kan-add" onclick="addPipeToCol('${col.id}')">+ Agregar</button>
+      </div>
+    </div>`).join('');
+  renderFunnel();
+}
+
+let _dragSrc=null, _dragId=null;
+function dragCard(e,col,id){ _dragSrc=col; _dragId=id; }
+function dropCard(e,tgt){
+  e.preventDefault();
+  if(!_dragSrc||!_dragId||_dragSrc===tgt) return;
+  const src = PIPE_COLS.find(c=>c.id===_dragSrc);
+  const dst = PIPE_COLS.find(c=>c.id===tgt);
+  if(!src||!dst) return;
+  const i = src.cards.findIndex(c=>c.id===_dragId);
+  if(i<0) return;
+  dst.cards.push(src.cards.splice(i,1)[0]);
+  _dragSrc=null; _dragId=null;
+  renderKanban();
+}
+function addPipeCard(){ addPipeToCol('nuevo'); }
+function addPipeToCol(colId){
+  const nombre = prompt('Nombre del cliente:');
+  if(!nombre) return;
+  const tel = prompt('Teléfono:') || '';
+  const nota = prompt('Nota (opcional):') || '';
+  PIPE_COLS.find(c=>c.id===colId)?.cards.push({id:Date.now().toString(),nombre,tel,nota});
+  renderKanban();
+}
+function delPipeCard(col,id){
+  const c = PIPE_COLS.find(c=>c.id===col);
+  if(c) c.cards = c.cards.filter(x=>x.id!==id);
+  renderKanban();
+}
+
+// Funnel
+function renderFunnel() {
+  const el = document.getElementById('funnelViz');
+  if (!el) return;
+  const max = Math.max(...PIPE_COLS.map(c=>c.cards.length), 1);
+  el.innerHTML = PIPE_COLS.map(col => {
+    const pct = max > 0 ? Math.round(col.cards.length / max * 100) : 0;
+    const width = Math.max(10, pct);
+    return `<div style="display:flex;align-items:center;gap:10px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);width:90px;text-align:right">${col.label.split(' ').slice(1).join(' ')}</div>
+      <div style="flex:1;background:var(--bord);border-radius:4px;height:24px;overflow:hidden">
+        <div style="height:100%;width:${width}%;background:${col.color};border-radius:4px;display:flex;align-items:center;padding:0 8px;transition:.5s">
+          <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#fff">${col.cards.length}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CAMPAÑAS
+// ══════════════════════════════════════════════════════════════
+let campanas = [];
+
+function updateCampCount() {
+  const seg = document.getElementById('campSegmento')?.value || 'todos';
+  let count = 0;
+  if (seg==='todos')    count = allContacts.length;
+  else if (seg==='activos')  count = allContacts.filter(c=>c.estado==='Activo').length;
+  else if (seg==='frios')    count = allContacts.filter(c=>c.estado==='Frío').length;
+  else if (seg==='perdidos') count = allContacts.filter(c=>c.estado==='Perdido').length;
+  else if (seg==='vip')      count = allContacts.filter(c=>(c.etiquetas||[]).includes('VIP')).length;
+  else if (seg==='gomeria')  count = allContacts.filter(c=>(c.etiquetas||[]).includes('Gomería')).length;
+  const el = document.getElementById('campCount');
+  if(el) el.textContent = count.toLocaleString('es-AR');
+}
+
+function launchCamp() {
+  const nombre  = document.getElementById('campNombre')?.value;
+  const mensaje = document.getElementById('campMensaje')?.value;
+  if (!nombre || !mensaje) { alert('Completá nombre y mensaje.'); return; }
+  const seg = document.getElementById('campSegmento')?.value || 'todos';
+  const count = parseInt((document.getElementById('campCount')?.textContent||'0').replace(/\./g,''));
+  campanas.unshift({ id:Date.now(), nombre, segmento:seg, mensaje, destinatarios:count, enviados:0, estado:'Programada', fecha:new Date().toLocaleDateString('es-AR') });
+  renderCampanas();
+  document.getElementById('campanaForm').style.display = 'none';
+  document.getElementById('campNombre').value = '';
+  document.getElementById('campMensaje').value = '';
+  addNotif('📣', `Campaña "${nombre}" creada para ${count.toLocaleString('es-AR')} contactos`);
+}
+
+function renderCampanas() {
+  const el = document.getElementById('campasTable');
+  if (!el) return;
+  if (!campanas.length) { el.innerHTML = '<div class="empty-state" style="padding:40px"><div class="empty-icon">📣</div><div class="empty-title">Sin campañas aún</div></div>'; return; }
+  const cm = {'Programada':'chip-amber','Enviando':'chip-blue','Completada':'chip-green'};
+  el.innerHTML = `<table class="tbl"><thead><tr><th>CAMPAÑA</th><th>SEGMENTO</th><th>DESTINATARIOS</th><th>ENVIADOS</th><th>ESTADO</th><th>FECHA</th><th></th></tr></thead>
+    <tbody>${campanas.map(c=>`<tr>
+      <td class="td-main">${c.nombre}</td><td>${c.segmento}</td>
+      <td class="td-mono">${c.destinatarios.toLocaleString('es-AR')}</td>
+      <td class="td-mono">${c.enviados}</td>
+      <td><span class="chip ${cm[c.estado]||'chip-blue'}">${c.estado}</span></td>
+      <td class="td-mono">${c.fecha}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="simCamp(${c.id})">▶ Simular</button></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function simCamp(id) {
+  const c = campanas.find(x=>x.id===id);
+  if(!c) return;
+  c.estado='Completada'; c.enviados=Math.min(c.destinatarios,50);
+  renderCampanas();
+  addNotif('✅', `Campaña "${c.nombre}" simulada — ${c.enviados} mensajes`);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SEGUIMIENTO
+// ══════════════════════════════════════════════════════════════
+function updateSegStats() {
+  const frios   = allContacts.filter(c=>c.estado==='Frío').length;
+  const perdidos = allContacts.filter(c=>c.estado==='Perdido').length;
+  const s48 = Math.floor(allContacts.length * 0.05);
+  ['seg48','segFrios','segPerdidos','segHoy'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = [s48,frios,perdidos,0][i];
+  });
+  document.getElementById('badgeSeg').textContent = frios + perdidos;
+
+  const cola = document.getElementById('segCola');
+  if (!cola) return;
+  const pending = allContacts.filter(c=>c.estado==='Frío').slice(0,8);
+  if (!pending.length) { cola.innerHTML='<div class="empty-state" style="padding:36px"><div class="empty-icon">✅</div><div class="empty-title">Todo al día</div></div>'; return; }
+  cola.innerHTML = pending.map(c=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:9px 14px;border-bottom:1px solid var(--bord)">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--adim);border:1px solid var(--amber);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">🌡️</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:700">${c.nombre||'Sin nombre'}</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">${c.telefono}</div>
+      </div>
+      <button onclick="sendWA('${c.telefono}')" class="btn btn-secondary btn-sm" style="font-size:9px;padding:3px 7px">💬 WA</button>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MAPA DE CLIENTES
+// ══════════════════════════════════════════════════════════════
+function updateMapaClientes() {
+  const cnt = {};
+  allContacts.forEach(c => { if(c.provincia) cnt[c.provincia]=(cnt[c.provincia]||0)+1; });
+  const total = allContacts.length;
+  const el = document.getElementById('mapaTotal');
+  if(el) el.textContent = total.toLocaleString('es-AR');
+  const maxV = Math.max(...Object.values(cnt), 1);
+  Object.entries(cnt).forEach(([p,n]) => {
+    const path = document.getElementById('mcp-'+p);
+    const txt  = document.getElementById('mct-'+p);
+    if (path) {
+      const t = n / maxV;
+      const r = Math.round(13 + t*29), g = Math.round(26 + t*104), b = Math.round(58 + t*193);
+      path.setAttribute('fill', `rgb(${r},${g},${b})`);
+    }
+    if (txt) txt.textContent = n.toLocaleString('es-AR');
+  });
+  const ranking = document.getElementById('mapaRanking');
+  if (!ranking) return;
+  const sorted = Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  if (!sorted.length) { ranking.innerHTML='<div class="empty-state" style="padding:24px"><div class="empty-icon">🗺️</div><div class="empty-title">Sin datos</div></div>'; return; }
+  ranking.innerHTML = sorted.map(([p,n],i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--bord);cursor:pointer" onclick="mapaClick('${p}')">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);width:16px">#${i+1}</div>
+      <div style="flex:1;font-size:11px;font-weight:600">${p}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--p3);font-weight:700">${n.toLocaleString('es-AR')}</div>
+      <div style="width:50px"><div class="prog-bar"><div class="prog-fill" style="width:${Math.round(n/maxV*100)}%;background:var(--p2)"></div></div></div>
+    </div>`).join('');
+}
+
+function mapaClick(prov) {
+  const contacts = allContacts.filter(c=>c.provincia===prov);
+  const det = document.getElementById('mapaDetalle');
+  const title = document.getElementById('mapaDetalleTitle');
+  const body = document.getElementById('mapaDetalleBody');
+  if(!det||!title||!body) return;
+  det.style.display = 'block';
+  title.textContent = `📍 ${prov} — ${contacts.length} clientes`;
+  body.innerHTML = contacts.slice(0,6).map(c=>`
+    <div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--bord)">
+      <div style="flex:1;font-size:10px;font-weight:600">${c.nombre||'—'}</div>
+      <button onclick="sendWA('${c.telefono}')" style="padding:2px 6px;background:var(--gdim);border:1px solid var(--green);border-radius:3px;color:var(--green2);font-size:8px;cursor:pointer">WA</button>
+    </div>`).join('') +
+    (contacts.length>6 ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:7px">+${(contacts.length-6).toLocaleString('es-AR')} más en ${prov}</div>` : '');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TEMPLATES WHATSAPP
+// ══════════════════════════════════════════════════════════════
+let templates = [
+  { id:1, nombre:'Saludo inicial',       categoria:'Bienvenida', mensaje:'Hola {nombre} 👋 Somos Neumáticos Importados. ¿En qué podemos ayudarte hoy?' },
+  { id:2, nombre:'Cotización recibida',  categoria:'Ventas',     mensaje:'Hola {nombre}, encontramos estas opciones para tu consulta 🔧 Te envío los precios a continuación.' },
+  { id:3, nombre:'Seguimiento 24hs',     categoria:'Seguimiento',mensaje:'Hola {nombre}, ¿pudiste ver la cotización que te enviamos? Estamos disponibles para cualquier consulta 😊' },
+  { id:4, nombre:'Post-venta 7 días',    categoria:'Post-venta', mensaje:'Hola {nombre}! Esperamos que estés satisfecho con tu compra 🙌 ¿Cómo funcionaron las cubiertas?' },
+  { id:5, nombre:'Reactivación 30 días', categoria:'Reactivación',mensaje:'Hola {nombre} 👋 Hace un tiempo que no hablamos. Tenemos novedades en stock y precios especiales. ¿Te interesa ver las opciones?' },
+  { id:6, nombre:'Recordatorio renovación',categoria:'Renovación',mensaje:'Hola {nombre}! Es posible que sea momento de revisar tus cubiertas 🔄 ¿Querés que te coticemos las últimas novedades?' },
+];
+
+function renderTemplates() {
+  const grid = document.getElementById('templatesGrid');
+  if (!grid) return;
+  const catColors = { 'Bienvenida':'chip-green','Ventas':'chip-blue','Seguimiento':'chip-amber','Post-venta':'chip-cyan','Reactivación':'chip-red','Renovación':'chip-purple' };
+  grid.innerHTML = templates.map(t => `
+    <div class="panel" style="margin-bottom:0">
+      <div class="panel-hdr">
+        <span class="panel-title">${t.nombre}</span>
+        <span class="chip ${catColors[t.categoria]||'chip-blue'}">${t.categoria}</span>
+      </div>
+      <div class="panel-body">
+        <div style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:12px;background:var(--bg3);border:1px solid var(--bord);border-radius:6px;padding:10px">${t.mensaje}</div>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-secondary btn-sm" onclick="copyTemplate(${t.id})">📋 Copiar</button>
+          <button class="btn btn-primary btn-sm" onclick="useTemplate(${t.id})">💬 Usar en WA</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function copyTemplate(id) {
+  const t = templates.find(x=>x.id===id);
+  if (!t) return;
+  navigator.clipboard.writeText(t.mensaje);
+  addNotif('📋', `Template "${t.nombre}" copiado al portapapeles`);
+}
+
+function useTemplate(id) {
+  const t = templates.find(x=>x.id===id);
+  if (!t) return;
+  const tel = prompt('Número de WhatsApp (ej: 541112345678):');
+  if (!tel) return;
+  const nombre = prompt('Nombre del cliente:') || 'cliente';
+  const msg = t.mensaje.replace('{nombre}', nombre);
+  window.open(`https://wa.me/${tel.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function addTemplate() {
+  const nombre = prompt('Nombre del template:');
+  if (!nombre) return;
+  const mensaje = prompt('Mensaje (usá {nombre} para personalizar):');
+  if (!mensaje) return;
+  templates.push({ id: Date.now(), nombre, categoria:'Personalizado', mensaje });
+  renderTemplates();
+  addNotif('📝', `Template "${nombre}" creado`);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════════════════════
+function updateDashboard() {
+  const el = document.getElementById('mContacts');
+  if (el) el.textContent = allContacts.length.toLocaleString('es-AR');
+  const sc = document.getElementById('sysContacts');
+  if (sc) sc.textContent = allContacts.length.toLocaleString('es-AR');
+  const sp = document.getElementById('sysPipe');
+  if (sp) sp.textContent = PIPE_COLS.reduce((a,c)=>a+c.cards.length,0) + ' leads';
+  const sv = document.getElementById('v1contacts');
+  if (sv) sv.textContent = allContacts.length.toLocaleString('es-AR');
+  const sc2 = document.getElementById('sysCamp');
+  if (sc2) sc2.textContent = campanas.length;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  GOMESCRAPER PRO
+// ══════════════════════════════════════════════════════════════
+const GS_PUNTOS = {
+  'Jujuy':               [[-24.19,-65.30],[-23.20,-65.10],[-22.50,-65.60],[-24.90,-65.42],[-23.66,-65.42]],
+  'Salta':               [[-24.79,-65.41],[-23.20,-64.50],[-25.80,-65.50],[-24.30,-66.20],[-22.60,-64.30],[-24.00,-65.80]],
+  'Formosa':             [[-26.18,-58.18],[-24.50,-60.00],[-25.50,-59.00],[-26.80,-58.50],[-25.00,-58.50]],
+  'Chaco':               [[-27.45,-58.99],[-26.50,-60.50],[-28.00,-59.50],[-27.00,-60.00],[-26.80,-59.50]],
+  'Misiones':            [[-27.36,-55.90],[-26.00,-54.60],[-27.50,-54.60],[-28.20,-55.80],[-26.80,-55.20]],
+  'Tucumán':             [[-26.82,-65.22],[-27.40,-65.60],[-26.50,-64.80],[-27.00,-65.50]],
+  'Santiago del Estero': [[-27.80,-64.26],[-28.50,-63.50],[-26.80,-63.00],[-29.00,-64.80],[-27.50,-62.80]],
+  'Catamarca':           [[-28.47,-65.78],[-27.50,-66.80],[-29.50,-66.50],[-28.00,-67.00]],
+  'La Rioja':            [[-29.41,-66.86],[-30.50,-67.50],[-28.50,-67.50],[-29.00,-67.80]],
+  'Corrientes':          [[-27.47,-58.83],[-28.50,-58.00],[-29.50,-57.50],[-27.00,-57.00],[-28.00,-57.50]],
+  'Entre Ríos':          [[-31.73,-60.52],[-32.50,-58.50],[-30.50,-58.00],[-33.00,-59.00],[-31.00,-59.50]],
+  'Santa Fe':            [[-31.63,-60.70],[-32.95,-60.64],[-30.00,-61.00],[-33.50,-61.00],[-29.00,-60.00],[-31.00,-61.50]],
+  'Córdoba':             [[-31.41,-64.18],[-33.00,-64.00],[-32.00,-65.00],[-30.00,-64.00],[-31.50,-63.00],[-32.50,-62.00],[-30.50,-65.00]],
+  'San Juan':            [[-31.54,-68.54],[-30.00,-69.00],[-32.50,-68.50],[-31.00,-69.50]],
+  'San Luis':            [[-33.30,-66.34],[-34.00,-66.50],[-32.50,-65.50],[-33.50,-65.80]],
+  'Mendoza':             [[-32.89,-68.83],[-34.50,-68.50],[-33.50,-69.50],[-35.00,-69.00],[-36.50,-69.80]],
+  'Buenos Aires':        [[-36.68,-60.56],[-38.00,-57.55],[-38.72,-62.27],[-37.32,-59.14],[-35.58,-57.95],[-37.00,-62.00],[-36.00,-59.00],[-35.00,-61.00],[-36.50,-58.00],[-39.50,-62.50],[-34.56,-58.46],[-34.47,-58.53],[-34.43,-58.58],[-34.71,-58.39],[-34.72,-58.25],[-34.76,-58.40],[-34.86,-57.97],[-34.65,-58.62],[-34.77,-58.64],[-34.64,-58.68],[-34.60,-58.74],[-34.59,-58.39],[-34.72,-58.48],[-34.82,-58.40],[-34.68,-58.55],[-34.61,-58.37],[-34.58,-58.42],[-34.55,-58.47],[-34.54,-58.30],[-34.50,-58.50]],
+  'CABA':                [[-34.604,-58.381],[-34.620,-58.430],[-34.570,-58.415],[-34.650,-58.370],[-34.580,-58.455],[-34.635,-58.370],[-34.612,-58.362],[-34.593,-58.422],[-34.643,-58.420],[-34.589,-58.393],[-34.660,-58.400],[-34.575,-58.380]],
+  'La Pampa':            [[-36.62,-64.29],[-37.50,-65.00],[-35.50,-64.00],[-38.00,-63.50],[-36.00,-66.00]],
+  'Neuquén':             [[-38.95,-68.06],[-40.00,-70.00],[-37.50,-70.00],[-39.00,-66.00],[-38.00,-69.00]],
+  'Río Negro':           [[-41.13,-71.30],[-40.80,-63.00],[-39.50,-65.00],[-42.00,-65.00],[-41.00,-68.00]],
+  'Chubut':              [[-45.86,-67.50],[-43.30,-65.10],[-45.00,-69.00],[-44.00,-66.00],[-42.80,-65.00]],
+  'Santa Cruz':          [[-51.62,-69.22],[-48.80,-65.10],[-50.00,-68.00],[-52.00,-70.00],[-47.50,-65.80]],
+  'Tierra del Fuego':    [[-54.80,-68.30],[-54.50,-67.00],[-55.00,-66.00]],
+};
+const GS_TERMINOS = ['gomería','gomeria','taller tren delantero','casa de neumaticos','neumáticos','neumaticos','tire shop','taller neumaticos'];
+const GS_GRUPOS = {
+  todo:   Object.keys(GS_PUNTOS),
+  bsas:   ['Buenos Aires','CABA'],
+  norte:  ['Jujuy','Salta','Formosa','Chaco','Misiones','Tucumán','Santiago del Estero','Catamarca','La Rioja','Corrientes'],
+  centro: ['Córdoba','Santa Fe','Entre Ríos','San Juan','San Luis','Mendoza','Buenos Aires','CABA','La Pampa'],
+  sur:    ['Neuquén','Río Negro','Chubut','Santa Cruz','Tierra del Fuego'],
+  none:   [],
+};
+let gsInited=false;
+const GS={key:'',queue:[],running:false,paused:false,results:[],ids:new Set(),total:0,done:0,pauseRes:null};
+
+function gsInit(){ gsInited=true; gsSelGrp('todo',document.getElementById('gsb-todo')); }
+
+function gsClickProv(name){
+  if(GS.running&&!GS.paused) return;
+  const i=GS.queue.findIndex(q=>q.name===name);
+  if(i>=0&&GS.queue[i].status==='queued') GS.queue.splice(i,1);
+  else if(i<0) GS.queue.push({name,status:'queued',count:0});
+  gsRender(); gsCheckReady();
+}
+function gsSelGrp(grp,btn){
+  if(GS.running&&!GS.paused) return;
+  document.querySelectorAll('.gs-mb').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  const names=GS_GRUPOS[grp]||[];
+  if(grp==='none') GS.queue=GS.queue.filter(q=>q.status!=='queued');
+  else names.forEach(n=>{ if(!GS.queue.find(q=>q.name===n)) GS.queue.push({name:n,status:'queued',count:0}); });
+  gsRender(); gsCheckReady();
+}
+function gsClearAll(){ if(GS.running) return; GS.queue=[]; gsRender(); gsCheckReady(); }
+
+function gsSetStyle(name,cls){
+  const ps=document.getElementById('gps-'+name);
+  const pl=document.getElementById('gpl-'+name);
+  if(!ps) return;
+  ps.className.baseVal='ps '+(cls||'');
+  if(pl) pl.className.baseVal='plbl '+(cls||'');
+  const fills={'':'#112040','sel':'#1d4ed8','run':'#065f46','done':'#064e3b','err':'#450a0a'};
+  ps.setAttribute('fill',fills[cls]||fills['']);
+}
+
+function gsRender(){
+  Object.keys(GS_PUNTOS).forEach(n=>{
+    const q=GS.queue.find(q=>q.name===n);
+    if(!q) gsSetStyle(n,'');
+    else if(q.status==='queued')  gsSetStyle(n,'sel');
+    else if(q.status==='running') gsSetStyle(n,'run');
+    else if(q.status==='done')    gsSetStyle(n,'done');
+    else if(q.status==='error')   gsSetStyle(n,'err');
+  });
+  const qEl=document.getElementById('gsQList');
+  document.getElementById('gsSelN').textContent=GS.queue.length;
+  if(!GS.queue.length){qEl.innerHTML='<div class="gs-qempty">Seleccioná provincias en el mapa</div>';return;}
+  qEl.innerHTML='';
+  GS.queue.forEach(q=>{
+    const d=document.createElement('div');
+    const cls=q.status==='queued'?'':q.status==='running'?'run':q.status;
+    d.className=`gs-qi ${cls}`;
+    d.innerHTML=`<span class="gs-qdot"></span><span class="gs-qn">${q.name}</span><span class="gs-qc">${q.count?q.count+' res':''}</span>`;
+    qEl.appendChild(d);
+  });
+}
+
+function gsOnKey(v){
+  GS.key=v.trim();
+  const p=document.getElementById('gsKpill');
+  if(GS.key.startsWith('AIza')&&GS.key.length>20){p.className='gs-kpill ok';p.textContent='✓ OK';}
+  else if(GS.key.length>3){p.className='gs-kpill bad';p.textContent='✗';}
+  else{p.className='gs-kpill';p.textContent='SIN KEY';}
+  gsCheckReady();
+}
+function gsCheckReady(){
+  const ok=GS.key.startsWith('AIza')&&GS.key.length>20&&GS.queue.some(q=>q.status==='queued')&&!GS.running;
+  document.getElementById('gsRunBtn').disabled=!ok;
+}
+function gsTogPause(){
+  const btn=document.getElementById('gsPauseBtn');
+  const banner=document.getElementById('gsPauseBanner');
+  if(!GS.paused){GS.paused=true;btn.className='gs-qb resume';btn.textContent='▶';banner.style.display='block';gsLog('⏸ PAUSADO','p');}
+  else{GS.paused=false;btn.className='gs-qb pause';btn.textContent='⏸';banner.style.display='none';gsLog('▶ Reanudado','w');if(GS.pauseRes){GS.pauseRes();GS.pauseRes=null;}}
+}
+function gsWaitPause(){ if(!GS.paused) return Promise.resolve(); return new Promise(r=>{GS.pauseRes=r;}); }
+
+async function gsStartRun(){
+  GS.running=true;GS.paused=false;
+  document.getElementById('gsRunBtn').style.display='none';
+  document.getElementById('gsPauseBtn').style.display='inline-flex';
+  document.getElementById('gsPrgSec').style.display='block';
+  const jobs=[];
+  GS.queue.filter(q=>q.status==='queued').forEach(q=>{
+    (GS_PUNTOS[q.name]||[]).forEach(p=>GS_TERMINOS.forEach(t=>jobs.push({pname:q.name,lat:p[0],lng:p[1],t})));
+  });
+  GS.total=jobs.length;GS.done=0;
+  gsLog(`🚀 ${jobs.length} búsquedas · ${GS.queue.filter(q=>q.status==='queued').length} provincias`,'w');
+  let lastProv=null;
+  for(const job of jobs){
+    await gsWaitPause();
+    if(job.pname!==lastProv){
+      if(lastProv){const q=GS.queue.find(q=>q.name===lastProv);if(q){q.status=q.count>0?'done':'error';gsRender();}}
+      lastProv=job.pname;
+      const q=GS.queue.find(q=>q.name===job.pname);if(q){q.status='running';gsRender();}
+      gsLog(`━━ ${job.pname.toUpperCase()} ━━`,'w');
+    }
+    try{
+      let token=null,pags=0,nuevos=0;
+      do{
+        await gsWaitPause();
+        const data=await gsApiCall(job.t,job.lat,job.lng,token);
+        if(!['OK','ZERO_RESULTS'].includes(data.status)){
+          if(data.status==='REQUEST_DENIED'){gsLog('✗ API Key rechazada.','e');gsFinish();return;}
+          gsLog(`⚠ ${data.status}`,'e');break;
+        }
+        for(const place of(data.results||[])){
+          if(GS.ids.has(place.place_id)) continue;
+          GS.ids.add(place.place_id);
+          await gsSleep(220);
+          const det=await gsDetailCall(place.place_id);
+          const item={provincia:job.pname,nombre:place.name||'',direccion:det.formatted_address||place.vicinity||'',tel:det.formatted_phone_number||'',tel_int:det.international_phone_number||'',web:det.website||'',maps:det.url||`https://maps.google.com/?place_id=${place.place_id}`,rating:place.rating||'',reviews:place.user_ratings_total||'',horarios:(det.opening_hours?.weekday_text||[]).join(' | '),tipo:(place.types||[]).filter(t=>!['point_of_interest','establishment'].includes(t)).slice(0,2).join(', ')};
+          GS.results.push(item);nuevos++;
+          const q=GS.queue.find(q=>q.name===job.pname);if(q)q.count++;
+          gsAddCard(item);gsUpdStats();
+        }
+        token=data.next_page_token;pags++;
+        if(token&&pags<3) await gsSleep(2100);
+      }while(token&&pags<3);
+      if(nuevos>0) gsLog(`  +${nuevos} (${job.t})`,'ok');
+    }catch(e){gsLog(`  ✗ ${e.message}`,'e');}
+    GS.done++;gsUpdPrg();
+    document.getElementById('gsPrgSub').textContent=`${job.pname} · "${job.t}"`;
+    await gsSleep(400);
+  }
+  if(lastProv){const q=GS.queue.find(q=>q.name===lastProv);if(q){q.status=q.count>0?'done':'error';gsRender();}}
+  gsLog(`✅ COMPLETADO — ${GS.results.length} registros únicos`,'ok');
+  gsFinish();gsSw('Res');
+  addNotif('🔍',`GomeScraper: ${GS.results.length} gomerías encontradas`);
+}
+
+function gsFinish(){
+  GS.running=false;GS.paused=false;
+  document.getElementById('gsPauseBtn').style.display='none';
+  document.getElementById('gsRunBtn').style.display='inline-flex';
+  document.getElementById('gsPauseBanner').style.display='none';
+  document.getElementById('gsPauseBtn').className='gs-qb pause';
+  document.getElementById('gsPauseBtn').textContent='⏸';
+  gsCheckReady();
+  if(GS.results.length){document.getElementById('gsDlBtn').disabled=false;document.getElementById('gsCrmBtn').disabled=false;}
+}
+
+async function gsApiCall(kw,lat,lng,token){
+  const url=token?`https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=${GS.key}&pagetoken=${token}&language=es`:`https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=${GS.key}&location=${lat},${lng}&radius=4000&keyword=${encodeURIComponent(kw)}&language=es`;
+  const r=await fetch(url);if(!r.ok) throw new Error(`HTTP ${r.status}`);return r.json();
+}
+async function gsDetailCall(pid){
+  const fields='formatted_phone_number,international_phone_number,website,formatted_address,url,opening_hours';
+  const url=`https://maps.googleapis.com/maps/api/place/details/json?key=${GS.key}&place_id=${pid}&fields=${fields}&language=es`;
+  try{const r=await fetch(url);return(await r.json()).result||{};}catch{return{};}
+}
+function gsSleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function gsLog(msg,type=''){
+  const el=document.getElementById('gsLogEl');
+  const t=new Date().toLocaleTimeString('es-AR');
+  const d=document.createElement('div');
+  d.className=`gs-ll ${type}`;
+  d.innerHTML=`<span class="gs-lt">${t}</span>${msg}`;
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+function gsAddCard(item){
+  const el=document.getElementById('gsResEl');
+  if(el.children.length===1&&!el.children[0].classList.contains('gs-rc')) el.innerHTML='';
+  const d=document.createElement('div');d.className='gs-rc';
+  d.innerHTML=`<div class="gs-rcn">${item.nombre}</div><div class="gs-rca">${item.direccion||'—'}</div><div class="gs-rcch"><span class="gs-ch z">${item.provincia}</span>${item.tel?`<span class="gs-ch t">📞 ${item.tel}</span>`:''}${item.web?`<span class="gs-ch w">🌐 web</span>`:''}${item.rating?`<span class="gs-ch r">★ ${item.rating}</span>`:''}</div>`;
+  el.insertBefore(d,el.firstChild);
+  while(el.children.length>200) el.removeChild(el.lastChild);
+  document.getElementById('gsRCnt').textContent=`(${GS.results.length})`;
+}
+function gsUpdStats(){
+  document.getElementById('gsHT').textContent=GS.results.length;
+  document.getElementById('gsHP').textContent=GS.results.filter(r=>r.tel).length;
+  document.getElementById('gsHW').textContent=GS.results.filter(r=>r.web).length;
+  document.getElementById('gsHR').textContent=GS.results.filter(r=>r.rating).length;
+}
+function gsUpdPrg(){
+  const pct=GS.total?Math.round(GS.done/GS.total*100):0;
+  document.getElementById('gsPrgFill').style.width=pct+'%';
+  document.getElementById('gsPrgPct').textContent=pct+'%';
+  document.getElementById('gsPrgTxt').textContent=`${GS.done} / ${GS.total} búsquedas`;
+}
+function gsSw(tab){
+  ['Log','Res'].forEach(t=>{
+    document.getElementById('gsT'+t).classList.toggle('on',t===tab);
+    document.getElementById('gsTc'+t).classList.toggle('on',t===tab);
+  });
+}
+function gsDl(){
+  if(!GS.results.length) return;
+  const BOM='\uFEFF';
+  const h=['#','Provincia','Nombre','Dirección','Teléfono Local','Teléfono Internacional','WhatsApp','Sitio Web','Google Maps','Rating','Reseñas','Horarios','Tipo','Contactado','Observaciones'];
+  const rows=GS.results.map((r,i)=>[i+1,r.provincia,r.nombre,r.direccion,r.tel,r.tel_int,r.tel,r.web,r.maps,r.rating,r.reviews,r.horarios,r.tipo,'No','']);
+  const csv=BOM+[h,...rows].map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`gomerias_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  gsLog(`📥 ${GS.results.length} registros exportados`,'ok');
+}
+function gsImportCRM(){
+  if(!GS.results.length) return;
+  const nuevos=GS.results.map(r=>({nombre:r.nombre,telefono:r.tel,direccion:r.direccion,provincia:r.provincia,estado:'Lead',fuente:'GomeScraper',etiquetas:['Gomería'],notas:r.web||''})).filter(r=>r.telefono);
+  const existing=new Set(allContacts.map(c=>c.telefono?.replace(/\D/g,'')));
+  const uniq=nuevos.filter(r=>!existing.has(r.telefono.replace(/\D/g,'')));
+  allContacts=[...allContacts,...uniq];
+  filterContacts();updateDashboard();updateMapaClientes();
+  addNotif('👥',`${uniq.length} gomerías importadas al CRM como leads`);
+  alert(`✅ ${uniq.length} gomerías importadas al CRM con etiqueta "Gomería" y estado "Lead".`);
+}
+</script>
+</body>
+</html>

@@ -632,6 +632,19 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
         <select class="form-select" id="filterEstado" style="width:120px;padding:5px 9px;font-size:11px;height:32px" onchange="filterContacts()">
           <option value="">Todos</option><option>Activo</option><option>Frío</option><option>Perdido</option><option>Lead</option>
         </select>
+        <select class="form-select" id="filterRating" title="Rating mínimo en Google" style="width:110px;padding:5px 9px;font-size:11px;height:32px" onchange="filterContacts()">
+          <option value="">★ Rating</option><option value="3">★ 3+</option><option value="4">★ 4+</option><option value="4.5">★ 4.5+</option>
+        </select>
+        <select class="form-select" id="filterWeb" style="width:100px;padding:5px 9px;font-size:11px;height:32px" onchange="filterContacts()">
+          <option value="">🌐 Web</option><option value="con">Con web</option><option value="sin">Sin web</option>
+        </select>
+        <select class="form-select" id="filterTipo" style="width:140px;padding:5px 9px;font-size:11px;height:32px" onchange="filterContacts()">
+          <option value="">Todos los tipos</option>
+        </select>
+        <select class="form-select" id="filterFuente" style="width:130px;padding:5px 9px;font-size:11px;height:32px" onchange="filterContacts()">
+          <option value="">Todas las fuentes</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="clearContactFilters()" title="Limpiar filtros">✕</button>
         <div style="display:flex;gap:3px;flex-wrap:wrap">
           <span class="tag tag-vip" onclick="filterByTag('VIP')">⭐ VIP</span>
           <span class="tag tag-gomeria" onclick="filterByTag('Gomería')">🔧 Gomería</span>
@@ -649,11 +662,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
             <thead>
               <tr>
                 <th style="width:28px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" style="accent-color:var(--p2)"></th>
-                <th>NOMBRE</th><th>TELÉFONO</th><th>PROVINCIA</th><th>ETIQUETAS</th><th>ESTADO</th><th>FUENTE</th><th>ACCIONES</th>
+                <th>NOMBRE</th><th>TELÉFONO</th><th>PROVINCIA</th><th>ETIQUETAS</th><th>ESTADO</th><th>GOOGLE</th><th>FUENTE</th><th>ACCIONES</th>
               </tr>
             </thead>
             <tbody id="contactsTbody">
-              <tr><td colspan="8"><div class="empty-state" style="padding:40px"><div class="empty-icon">👥</div><div class="empty-title">Sin contactos</div><div class="empty-sub">Usá "Importar" para cargar tu base de 100k clientes</div></div></td></tr>
+              <tr><td colspan="9"><div class="empty-state" style="padding:40px"><div class="empty-icon">👥</div><div class="empty-title">Sin contactos</div><div class="empty-sub">Usá "Importar" para cargar tu base de 100k clientes</div></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -1152,6 +1165,7 @@ function initApp() {
   renderTemplates();
   renderFunnel();
   updateDashboard();
+  loadContacts();
   // Restore config from localStorage
   if (CFG.supaUrl) document.getElementById('supaUrl').value = CFG.supaUrl;
   if (CFG.supaKey) document.getElementById('supaKey').value = CFG.supaKey;
@@ -1338,6 +1352,101 @@ function closeModal(id) { document.getElementById(id)?.classList.remove('show') 
 // ══════════════════════════════════════════════════════════════
 let allContacts = [], filteredContacts = [], pendingImport = [];
 let pageSize = 50, currentPage = 1, activeTag = '';
+let contactMap = new Map(), contactsLoaded = false, _cidSeq = 0;
+
+// Escapa texto antes de insertarlo como HTML (nombres de CSV / Google Places)
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function safeUrl(u) { return /^https?:\/\//i.test(String(u || '')) ? String(u) : ''; }
+function telDigits(t) { return String(t || '').replace(/\D/g, ''); }
+function newId() { return Date.now().toString(36) + '-' + (_cidSeq++).toString(36); }
+function getContact(id) { return contactMap.get(id); }
+
+// Tipos de Google Places más comunes → español
+const GTYPE_ES = {
+  car_repair:'Taller mecánico', store:'Tienda', car_dealer:'Concesionaria', car_wash:'Lavadero',
+  gas_station:'Estación de servicio', hardware_store:'Ferretería', home_goods_store:'Bazar',
+  moving_company:'Mudanzas', parking:'Estacionamiento', storage:'Depósito', car_rental:'Alquiler de autos',
+};
+function tipoLabel(t) { return GTYPE_ES[t] || t; }
+function tiposOf(c) { return String(c.tipo || '').split(',').map(t => t.trim()).filter(Boolean); }
+
+// ── Persistencia local (IndexedDB: soporta 100k contactos, localStorage no) ──
+const IDB_NAME = 'neumaticos_crm', IDB_STORE = 'kv';
+let _idbP = null, _saveT = null;
+function idbOpen() {
+  if (!_idbP) _idbP = new Promise((res, rej) => {
+    const r = indexedDB.open(IDB_NAME, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(IDB_STORE);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return _idbP;
+}
+async function idbGet(key) {
+  const db = await idbOpen();
+  return new Promise((res, rej) => {
+    const q = db.transaction(IDB_STORE).objectStore(IDB_STORE).get(key);
+    q.onsuccess = () => res(q.result);
+    q.onerror = () => rej(q.error);
+  });
+}
+async function idbSet(key, val) {
+  const db = await idbOpen();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put(val, key);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+function flushContacts() {
+  clearTimeout(_saveT); _saveT = null;
+  return idbSet('contacts', allContacts).catch(e => addNotif('⚠️', 'No se pudieron guardar los contactos: ' + (e?.message || e)));
+}
+function saveContacts() { clearTimeout(_saveT); _saveT = setTimeout(flushContacts, 300); }
+window.addEventListener('beforeunload', () => { if (_saveT) flushContacts(); });
+
+async function loadContacts() {
+  if (contactsLoaded) return;
+  contactsLoaded = true;
+  try {
+    const saved = await idbGet('contacts');
+    if (Array.isArray(saved) && saved.length) {
+      // Si se importó algo antes de terminar la carga, no se pierde
+      allContacts = [...saved, ...allContacts];
+      refreshContacts();
+    }
+  } catch (e) {
+    addNotif('⚠️', 'No se pudieron cargar los contactos guardados: ' + (e?.message || e));
+  }
+}
+
+// Recalcula índices, filtros y vistas que dependen de los contactos y guarda
+function refreshContacts() {
+  allContacts.forEach(c => { if (!c.id) c.id = newId(); if (!Array.isArray(c.etiquetas)) c.etiquetas = []; });
+  contactMap = new Map(allContacts.map(c => [c.id, c]));
+  populateContactFilters();
+  filterContacts();
+  updateDashboard();
+  updateSegStats();
+  updateMapaClientes();
+  saveContacts();
+}
+
+// ── Supabase: solo columnas base de la tabla contactos, en lotes de 500 ──
+const SUPA_CONTACT_FIELDS = ['nombre','telefono','direccion','provincia','estado','fuente','etiquetas','notas'];
+async function pushContactsToSupabase(list) {
+  if (!CFG.supaUrl || !CFG.supaKey || !list.length) return;
+  let ok = 0, fail = 0;
+  for (let i = 0; i < list.length; i += 500) {
+    const batch = list.slice(i, i + 500).map(c => Object.fromEntries(SUPA_CONTACT_FIELDS.map(f => [f, c[f] ?? (f === 'etiquetas' ? [] : '')])));
+    if (await saveToSupabase('contactos', batch)) ok += batch.length; else fail += batch.length;
+  }
+  if (fail) addNotif('⚠️', `Supabase: ${ok.toLocaleString('es-AR')} guardados, ${fail.toLocaleString('es-AR')} con error (quedaron guardados localmente)`);
+  else addNotif('☁️', `${ok.toLocaleString('es-AR')} contactos guardados en Supabase`);
+}
 
 function backToStep1() {
   document.getElementById('impStep1').style.display = 'block';
@@ -1400,14 +1509,23 @@ function detectCol(headers, kws) {
   return headers[0] || '';
 }
 
+// Devuelve celulares argentinos como "+54 9 <característica+número>" (10 dígitos).
+// Acepta +54 / 0054 / 54, el 9 de celular, el 0 de larga distancia y el 15 local.
 function normalizePhone(raw) {
   if (!raw) return '';
-  let p = String(raw).replace(/[\s\-\.\(\)]/g, '');
-  p = p.replace(/^\+54/, '').replace(/^0054/, '');
+  let p = telDigits(raw);
+  if (p.startsWith('00')) p = p.slice(2);
+  if (p.startsWith('54') && p.length >= 12) p = p.slice(2);
+  if (p.startsWith('9') && p.length === 11) p = p.slice(1);
   if (p.startsWith('0')) p = p.slice(1);
-  if (p.startsWith('9') && p.length === 10) return '+54 ' + p;
-  if (p.length === 10) return '+54 9' + p.slice(1);
-  return raw;
+  if (p.length === 12) {
+    // característica (2-4 dígitos) + 15 + número
+    for (const a of (p.startsWith('11') ? [2] : [3, 4, 2])) {
+      if (p.slice(a, a + 2) === '15') { p = p.slice(0, a) + p.slice(a + 2); break; }
+    }
+  }
+  if (p.length !== 10) return String(raw).trim();
+  return '+54 9 ' + p;
 }
 
 function analyzeData(headers, rows) {
@@ -1415,8 +1533,17 @@ function analyzeData(headers, rows) {
   const cT = detectCol(headers, ['telefono','tel','phone','celular','movil','whatsapp']);
   const cD = detectCol(headers, ['direccion','domicilio','address','calle']);
   const cP = detectCol(headers, ['provincia','prov','region','localidad']);
+  // Columnas opcionales (por ej. el Excel exportado por GomeScraper)
+  const opt = kws => { const c = detectCol(headers, kws); return kws.some(k => c.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(k)) ? c : ''; };
+  const cW = opt(['sitio web','website','web']);
+  const cM = opt(['google maps','maps']);
+  const cR = opt(['rating','calificacion']);
+  const cRv = opt(['resenas','reviews']);
+  const cH = opt(['horario']);
+  const cTi = opt(['tipo']);
+  const num = v => { const n = parseFloat(String(v || '').replace(',', '.')); return isNaN(n) ? null : n; };
 
-  const existing = new Set(allContacts.map(c => c.telefono?.replace(/\D/g, '')));
+  const existing = new Set(allContacts.map(c => telDigits(c.telefono)));
   let valid = 0, dupes = 0, errors = 0;
   pendingImport = [];
 
@@ -1424,14 +1551,21 @@ function analyzeData(headers, rows) {
     const nombre = row[cN] || '';
     const rawTel = row[cT] || '';
     const tel = normalizePhone(rawTel);
-    const dig = tel.replace(/\D/g, '');
+    const dig = telDigits(tel);
     const dir = row[cD] || '';
     const prov = row[cP] || '';
-    if (!rawTel || rawTel.replace(/\D/g, '').length < 6) { errors++; continue; }
+    if (!rawTel || telDigits(rawTel).length < 6) { errors++; continue; }
     if (existing.has(dig)) { dupes++; continue; }
     existing.add(dig);
     valid++;
-    pendingImport.push({ nombre, telefono: tel, direccion: dir, provincia: prov, estado: 'Activo', fuente: 'Importado', etiquetas: [], notas: '' });
+    const c = { id: newId(), nombre, telefono: tel, direccion: dir, provincia: prov, estado: 'Activo', fuente: 'Importado', etiquetas: [], notas: '' };
+    if (cW && row[cW]) c.web = row[cW];
+    if (cM && row[cM]) c.maps = row[cM];
+    if (cR && num(row[cR]) !== null) c.rating = num(row[cR]);
+    if (cRv && num(row[cRv]) !== null) c.reviews = num(row[cRv]);
+    if (cH && row[cH]) c.horarios = row[cH];
+    if (cTi && row[cTi]) c.tipo = row[cTi];
+    pendingImport.push(c);
   }
 
   document.getElementById('impTotal').textContent  = rows.length.toLocaleString('es-AR');
@@ -1441,7 +1575,7 @@ function analyzeData(headers, rows) {
 
   const pt = document.getElementById('previewTable');
   pt.innerHTML = `<thead><tr><th>NOMBRE</th><th>TELÉFONO</th><th>DIRECCIÓN</th><th>PROVINCIA</th><th>ESTADO</th></tr></thead>
-    <tbody>${pendingImport.slice(0,5).map(c=>`<tr><td class="td-main">${c.nombre||'—'}</td><td class="td-mono">${c.telefono}</td><td>${c.direccion||'—'}</td><td>${c.provincia||'—'}</td><td><span class="chip chip-green">Activo</span></td></tr>`).join('')}</tbody>`;
+    <tbody>${pendingImport.slice(0,5).map(c=>`<tr><td class="td-main">${esc(c.nombre)||'—'}</td><td class="td-mono">${esc(c.telefono)}</td><td>${esc(c.direccion)||'—'}</td><td>${esc(c.provincia)||'—'}</td><td><span class="chip chip-green">Activo</span></td></tr>`).join('')}</tbody>`;
 
   document.getElementById('impStep1').style.display = 'none';
   document.getElementById('impStep2').style.display = 'block';
@@ -1450,51 +1584,90 @@ function analyzeData(headers, rows) {
 }
 
 async function confirmImport() {
-  allContacts = [...allContacts, ...pendingImport];
-  const n = pendingImport.length;
-
-  // Guardar en Supabase si está conectado
-  if (CFG.supaUrl && CFG.supaKey) {
-    const batch = pendingImport.slice(0, 500); // batch de 500
-    await saveToSupabase('contactos', batch);
-    addNotif('☁️', `${n.toLocaleString('es-AR')} contactos guardados en Supabase`);
-  }
-
+  const imported = pendingImport;
+  allContacts = [...allContacts, ...imported];
+  const n = imported.length;
   pendingImport = [];
+  pushContactsToSupabase(imported); // en segundo plano; avisa por notificación
   document.getElementById('impStep2').style.display = 'none';
   document.getElementById('impStep3').style.display = 'block';
   document.getElementById('impBtnBack').style.display = 'none';
   document.getElementById('impBtnConfirm').style.display = 'none';
   document.getElementById('impResultMsg').textContent = `✅ ${n.toLocaleString('es-AR')} contactos importados. Total en CRM: ${allContacts.length.toLocaleString('es-AR')}`;
 
-  filterContacts();
-  updateDashboard();
-  updateSegStats();
-  updateMapaClientes();
+  refreshContacts();
   addNotif('👥', `${n.toLocaleString('es-AR')} contactos importados correctamente`);
+}
+
+// Opciones de los filtros que dependen de los datos (tipo de negocio y fuente)
+function populateContactFilters() {
+  const fill = (id, first, values, label = v => v) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">${first}</option>` +
+      values.map(v => `<option value="${esc(v)}">${esc(label(v))}</option>`).join('');
+    sel.value = values.includes(cur) ? cur : '';
+  };
+  const tipos = new Set(), fuentes = new Set();
+  allContacts.forEach(c => { tiposOf(c).forEach(t => tipos.add(t)); fuentes.add(c.fuente || 'Manual'); });
+  fill('filterTipo', 'Todos los tipos', [...tipos].sort((a, b) => tipoLabel(a).localeCompare(tipoLabel(b))), tipoLabel);
+  fill('filterFuente', 'Todas las fuentes', [...fuentes].sort());
 }
 
 function filterContacts() {
   const s = (document.getElementById('contactSearch')?.value || '').toLowerCase();
   const p = document.getElementById('filterProv')?.value || '';
   const e = document.getElementById('filterEstado')?.value || '';
+  const minR = parseFloat(document.getElementById('filterRating')?.value || '') || 0;
+  const w = document.getElementById('filterWeb')?.value || '';
+  const ti = document.getElementById('filterTipo')?.value || '';
+  const fu = document.getElementById('filterFuente')?.value || '';
 
   filteredContacts = allContacts.filter(c => {
     const ms = !s || (c.nombre||'').toLowerCase().includes(s) || (c.telefono||'').includes(s);
     const mp = !p || c.provincia === p;
     const me = !e || c.estado === e;
     const mt = !activeTag || (c.etiquetas||[]).includes(activeTag);
-    return ms && mp && me && mt;
+    const mr = !minR || (Number(c.rating) || 0) >= minR;
+    const mw = !w || (w === 'con' ? !!c.web : !c.web);
+    const mti = !ti || tiposOf(c).includes(ti);
+    const mf = !fu || (c.fuente || 'Manual') === fu;
+    return ms && mp && me && mt && mr && mw && mti && mf;
   });
   currentPage = 1;
   document.getElementById('showingCount').textContent = filteredContacts.length.toLocaleString('es-AR');
   document.getElementById('totalCount').textContent   = allContacts.length.toLocaleString('es-AR');
+  document.getElementById('contactCount').textContent = `${allContacts.length.toLocaleString('es-AR')} contactos`;
   renderPage();
+}
+
+function clearContactFilters() {
+  ['contactSearch','filterProv','filterEstado','filterRating','filterWeb','filterTipo','filterFuente'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  activeTag = '';
+  filterContacts();
 }
 
 function filterByTag(tag) {
   activeTag = activeTag === tag ? '' : tag;
   filterContacts();
+}
+
+function ratingHtml(c) {
+  if (c.rating == null || c.rating === '') return '';
+  const rv = c.reviews ? ` <span style="color:var(--text3)">(${Number(c.reviews).toLocaleString('es-AR')})</span>` : '';
+  return `<span style="color:var(--amber2)">★ ${esc(c.rating)}</span>${rv}`;
+}
+
+function googleCell(c) {
+  const web = safeUrl(c.web), maps = safeUrl(c.maps);
+  const parts = [ratingHtml(c)];
+  if (web)  parts.push(`<a href="${esc(web)}" target="_blank" rel="noopener" title="Sitio web" style="text-decoration:none">🌐</a>`);
+  if (maps) parts.push(`<a href="${esc(maps)}" target="_blank" rel="noopener" title="Ver en Google Maps" style="text-decoration:none">📍</a>`);
+  const out = parts.filter(Boolean).join(' ');
+  return out || '<span style="color:var(--text3)">—</span>';
 }
 
 function renderPage() {
@@ -1505,24 +1678,28 @@ function renderPage() {
 
   const slice = filteredContacts.slice((currentPage-1)*pageSize, currentPage*pageSize);
   if (!slice.length) {
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state" style="padding:36px"><div class="empty-icon">🔍</div><div class="empty-title">Sin resultados</div></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state" style="padding:36px"><div class="empty-icon">🔍</div><div class="empty-title">Sin resultados</div></div></td></tr>`;
     return;
   }
   const chipMap = { 'Activo':'chip-green','Frío':'chip-amber','Perdido':'chip-red','Lead':'chip-blue' };
   const tagMap  = { 'VIP':'tag-vip','Gomería':'tag-gomeria','Taller':'tag-taller','Mayorista':'tag-mayorista','Minorista':'tag-minorista' };
-  tbody.innerHTML = slice.map((c,i) => `<tr>
+  tbody.innerHTML = slice.map(c => {
+    const tipos = tiposOf(c).map(tipoLabel).join(', ');
+    return `<tr>
     <td><input type="checkbox" style="accent-color:var(--p2)"></td>
-    <td class="td-main" style="cursor:pointer" onclick="show360(${allContacts.indexOf(c)})">${c.nombre||'—'}</td>
-    <td class="td-mono">${c.telefono||'—'}</td>
-    <td>${c.provincia||'—'}</td>
-    <td>${(c.etiquetas||[]).map(t=>`<span class="tag ${tagMap[t]||'tag-add'}">${t}</span>`).join('')}<span class="tag tag-add" onclick="addTag(${allContacts.indexOf(c)})">+</span></td>
-    <td><span class="chip ${chipMap[c.estado]||'chip-blue'}">${c.estado||'—'}</span></td>
-    <td style="font-family:var(--mono);font-size:8px;color:var(--text3)">${c.fuente||'Manual'}</td>
+    <td class="td-main" style="cursor:pointer" onclick="show360('${c.id}')">${esc(c.nombre)||'—'}${tipos ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text3);font-weight:400">${esc(tipos)}</div>` : ''}</td>
+    <td class="td-mono">${esc(c.telefono)||'—'}</td>
+    <td>${esc(c.provincia)||'—'}</td>
+    <td>${(c.etiquetas||[]).map(t=>`<span class="tag ${tagMap[t]||'tag-add'}">${esc(t)}</span>`).join('')}<span class="tag tag-add" onclick="addTag('${c.id}')">+</span></td>
+    <td><span class="chip ${chipMap[c.estado]||'chip-blue'}">${esc(c.estado)||'—'}</span></td>
+    <td style="font-size:10px;white-space:nowrap">${googleCell(c)}</td>
+    <td style="font-family:var(--mono);font-size:8px;color:var(--text3)">${esc(c.fuente||'Manual')}</td>
     <td style="display:flex;gap:3px">
-      <button class="btn btn-secondary btn-sm" style="padding:3px 6px;font-size:9px" onclick="sendWA('${c.telefono}')">💬</button>
-      <button class="btn btn-secondary btn-sm" style="padding:3px 6px;font-size:9px" onclick="show360(${allContacts.indexOf(c)})">👁</button>
+      <button class="btn btn-secondary btn-sm" style="padding:3px 6px;font-size:9px" onclick="sendWA('${telDigits(c.telefono)}')">💬</button>
+      <button class="btn btn-secondary btn-sm" style="padding:3px 6px;font-size:9px" onclick="show360('${c.id}')">👁</button>
     </td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
 }
 
 function changePage(dir) {
@@ -1532,46 +1709,73 @@ function changePage(dir) {
 }
 function setPageSize(n) { pageSize = n; currentPage = 1; renderPage(); }
 function toggleSelectAll(cb) { document.querySelectorAll('#contactsTbody input[type=checkbox]').forEach(c => c.checked = cb.checked); }
-function sendWA(tel) { const c = tel.replace(/\D/g,''); window.open(`https://wa.me/${c}`, '_blank'); }
+function sendWA(tel) { const c = telDigits(tel); window.open(`https://wa.me/${c}`, '_blank'); }
 
-function addTag(idx) {
+function addTag(id) {
+  const c = getContact(id);
+  if (!c) return;
   const tags = ['VIP','Gomería','Taller','Mayorista','Minorista','Lead'];
-  const t = prompt('Agregar etiqueta:\n' + tags.join(', '));
+  const t = (prompt('Agregar etiqueta:\n' + tags.join(', ')) || '').trim();
   if (!t) return;
-  if (!allContacts[idx].etiquetas) allContacts[idx].etiquetas = [];
-  if (!allContacts[idx].etiquetas.includes(t)) allContacts[idx].etiquetas.push(t);
+  if (!c.etiquetas.includes(t)) c.etiquetas.push(t);
   renderPage();
+  saveContacts();
+}
+
+function setContactField(id, field, value) {
+  const c = getContact(id);
+  if (!c) return;
+  c[field] = value;
+  saveContacts();
+  if (field === 'estado') { renderPage(); updateSegStats(); }
 }
 
 // ══ HISTORIAL 360° ══
-function show360(idx) {
-  const c = allContacts[idx];
+function show360(id) {
+  const c = getContact(id);
   if (!c) return;
   document.getElementById('c360Name').textContent = c.nombre || 'Sin nombre';
   document.getElementById('c360Tel').textContent  = c.telefono || '—';
   const body = document.getElementById('c360Body');
-  const tags = (c.etiquetas||[]).map(t=>`<span class="tag tag-vip">${t}</span>`).join('') || 'Sin etiquetas';
+  const tagMap = { 'VIP':'tag-vip','Gomería':'tag-gomeria','Taller':'tag-taller','Mayorista':'tag-mayorista','Minorista':'tag-minorista' };
+  const tags = (c.etiquetas||[]).map(t=>`<span class="tag ${tagMap[t]||'tag-add'}">${esc(t)}</span>`).join('') || 'Sin etiquetas';
+  const estados = ['Activo','Frío','Perdido','Lead'];
+  if (c.estado && !estados.includes(c.estado)) estados.push(c.estado);
+  const web = safeUrl(c.web), maps = safeUrl(c.maps);
+  const horarios = String(c.horarios || '').split('|').map(h => h.trim()).filter(Boolean);
+  const tipos = tiposOf(c).map(tipoLabel).join(', ');
+  const hasGoogle = web || maps || horarios.length || tipos || (c.rating != null && c.rating !== '');
+  const googleHtml = hasGoogle ? `
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;margin:12px 0 8px">DATOS DE GOOGLE</div>
+        <div class="panel"><div class="panel-body">
+          ${ratingHtml(c) ? `<div class="kpi-row"><span class="kpi-name">Rating</span><span class="kpi-val">${ratingHtml(c)}</span></div>` : ''}
+          ${tipos ? `<div class="kpi-row"><span class="kpi-name">Tipo</span><span class="kpi-val" style="font-size:10px">${esc(tipos)}</span></div>` : ''}
+          ${web ? `<div class="kpi-row"><span class="kpi-name">Sitio web</span><a class="kpi-val" style="font-size:10px;color:var(--p3);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" href="${esc(web)}" target="_blank" rel="noopener">${esc(web.replace(/^https?:\/\/(www\.)?/i,''))}</a></div>` : ''}
+          ${maps ? `<div class="kpi-row"><span class="kpi-name">Google Maps</span><a class="kpi-val" style="font-size:10px;color:var(--p3)" href="${esc(maps)}" target="_blank" rel="noopener">📍 Ver ubicación</a></div>` : ''}
+          ${horarios.length ? `<div class="kpi-row" style="border:none;align-items:flex-start"><span class="kpi-name">Horarios</span><span class="kpi-val" style="font-size:9px;line-height:1.6;text-align:right">${horarios.map(esc).join('<br>')}</span></div>` : ''}
+        </div></div>` : '';
   body.innerHTML = `
     <div class="grid3" style="margin-bottom:14px">
-      <div class="metric-card" style="--accent:var(--p2)"><div class="mc-label">PROVINCIA</div><div style="font-size:16px;font-weight:700;margin-top:6px">${c.provincia||'—'}</div></div>
-      <div class="metric-card" style="--accent:var(--green)"><div class="mc-label">ESTADO</div><div style="font-size:16px;font-weight:700;margin-top:6px;color:var(--green2)">${c.estado||'—'}</div></div>
-      <div class="metric-card" style="--accent:var(--amber)"><div class="mc-label">FUENTE</div><div style="font-size:14px;font-weight:700;margin-top:6px">${c.fuente||'Manual'}</div></div>
+      <div class="metric-card" style="--accent:var(--p2)"><div class="mc-label">PROVINCIA</div><div style="font-size:16px;font-weight:700;margin-top:6px">${esc(c.provincia)||'—'}</div></div>
+      <div class="metric-card" style="--accent:var(--green)"><div class="mc-label">ESTADO</div><div style="font-size:16px;font-weight:700;margin-top:6px;color:var(--green2)">${esc(c.estado)||'—'}</div></div>
+      <div class="metric-card" style="--accent:var(--amber)"><div class="mc-label">FUENTE</div><div style="font-size:14px;font-weight:700;margin-top:6px">${esc(c.fuente||'Manual')}</div></div>
     </div>
     <div class="grid2">
       <div>
         <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;margin-bottom:8px">INFORMACIÓN</div>
         <div class="panel"><div class="panel-body">
-          <div class="kpi-row"><span class="kpi-name">Teléfono</span><span class="kpi-val">${c.telefono||'—'}</span></div>
-          <div class="kpi-row"><span class="kpi-name">Dirección</span><span class="kpi-val" style="font-size:10px">${c.direccion||'—'}</span></div>
+          <div class="kpi-row"><span class="kpi-name">Teléfono</span><span class="kpi-val">${esc(c.telefono)||'—'}</span></div>
+          <div class="kpi-row"><span class="kpi-name">Dirección</span><span class="kpi-val" style="font-size:10px">${esc(c.direccion)||'—'}</span></div>
           <div class="kpi-row" style="border:none"><span class="kpi-name">Etiquetas</span><span>${tags}</span></div>
         </div></div>
+        ${googleHtml}
         <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;margin:12px 0 8px">NOTAS</div>
-        <textarea class="form-input" rows="3" placeholder="Agregar nota sobre este cliente..." oninput="allContacts[${idx}].notas=this.value" style="resize:vertical">${c.notas||''}</textarea>
+        <textarea class="form-input" rows="3" placeholder="Agregar nota sobre este cliente..." oninput="setContactField('${c.id}','notas',this.value)" style="resize:vertical">${esc(c.notas)}</textarea>
         <div style="display:flex;gap:6px;margin-top:8px">
-          <button class="btn btn-primary btn-sm" onclick="sendWA('${c.telefono}')">💬 Enviar WhatsApp</button>
-          <button class="btn btn-secondary btn-sm" onclick="addToPipeline(${idx})">🎯 Agregar al pipeline</button>
-          <select class="form-select" style="height:30px;font-size:10px;padding:4px 8px" onchange="allContacts[${idx}].estado=this.value;renderPage()">
-            <option>Activo</option><option>Frío</option><option>Perdido</option><option>Lead</option>
+          <button class="btn btn-primary btn-sm" onclick="sendWA('${telDigits(c.telefono)}')">💬 Enviar WhatsApp</button>
+          <button class="btn btn-secondary btn-sm" onclick="addToPipeline('${c.id}')">🎯 Agregar al pipeline</button>
+          <select class="form-select" style="height:30px;font-size:10px;padding:4px 8px" onchange="setContactField('${c.id}','estado',this.value);show360('${c.id}')">
+            ${estados.map(s => `<option${s === c.estado ? ' selected' : ''}>${esc(s)}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -1580,7 +1784,7 @@ function show360(idx) {
         <div class="panel">
           <div style="padding:12px 14px;border-bottom:1px solid var(--bord);display:flex;align-items:center;gap:8px">
             <span style="font-size:14px">📥</span>
-            <div><div style="font-size:11px;font-weight:600">Contacto importado</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3)">Fuente: ${c.fuente||'Manual'}</div></div>
+            <div><div style="font-size:11px;font-weight:600">Contacto importado</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3)">Fuente: ${esc(c.fuente||'Manual')}</div></div>
           </div>
           <div class="empty-state" style="padding:24px">
             <div class="empty-icon" style="font-size:24px">📋</div>
@@ -1593,20 +1797,21 @@ function show360(idx) {
   openModal('contact360Modal');
 }
 
-function addToPipeline(idx) {
-  const c = allContacts[idx];
+function addToPipeline(id) {
+  const c = getContact(id);
+  if (!c) return;
   PIPE_COLS[0].cards.push({ id: Date.now().toString(), nombre: c.nombre||'Sin nombre', tel: c.telefono||'', nota: c.provincia||'' });
   renderKanban();
   closeModal('contact360Modal');
-  addNotif('🎯', `${c.nombre} agregado al pipeline`);
+  addNotif('🎯', `${esc(c.nombre)} agregado al pipeline`);
 }
 
 function exportContacts() {
   if (!allContacts.length) { alert('Sin contactos.'); return; }
-  const BOM = '\uFEFF';
-  const h = ['Nombre','Teléfono','Dirección','Provincia','Estado','Etiquetas','Fuente'];
-  const rows = allContacts.map(c => [c.nombre,c.telefono,c.direccion,c.provincia,c.estado,(c.etiquetas||[]).join('|'),c.fuente]);
-  const csv = BOM + [h,...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const BOM = '﻿';
+  const h = ['Nombre','Teléfono','Dirección','Provincia','Estado','Etiquetas','Fuente','Notas','Rating','Reseñas','Tipo','Sitio Web','Google Maps','Horarios'];
+  const rows = allContacts.map(c => [c.nombre,c.telefono,c.direccion,c.provincia,c.estado,(c.etiquetas||[]).join('|'),c.fuente,c.notas,c.rating,c.reviews,c.tipo,c.web,c.maps,c.horarios]);
+  const csv = BOM + [h,...rows].map(r => r.map(v => `"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
   a.download = `contactos_${new Date().toISOString().slice(0,10)}.csv`;
@@ -1643,11 +1848,11 @@ function renderKanban() {
       <div class="kan-cards" id="kancol-${col.id}" ondragover="event.preventDefault()" ondrop="dropCard(event,'${col.id}')">
         ${col.cards.map(card => `
           <div class="kan-card" draggable="true" ondragstart="dragCard(event,'${col.id}','${card.id}')">
-            <div class="kan-card-name">${card.nombre}</div>
-            <div class="kan-card-tel">${card.tel}</div>
-            ${card.nota ? `<div class="kan-card-nota">${card.nota}</div>` : ''}
+            <div class="kan-card-name">${esc(card.nombre)}</div>
+            <div class="kan-card-tel">${esc(card.tel)}</div>
+            ${card.nota ? `<div class="kan-card-nota">${esc(card.nota)}</div>` : ''}
             <div class="kan-card-btns">
-              <button class="kan-btn kan-btn-wa" onclick="sendWA('${card.tel}')">💬 WA</button>
+              <button class="kan-btn kan-btn-wa" onclick="sendWA('${telDigits(card.tel)}')">💬 WA</button>
               <button class="kan-btn kan-btn-del" onclick="delPipeCard('${col.id}','${card.id}')">✕</button>
             </div>
           </div>`).join('')}
@@ -1782,10 +1987,10 @@ function updateSegStats() {
     <div style="display:flex;align-items:center;gap:9px;padding:9px 14px;border-bottom:1px solid var(--bord)">
       <div style="width:28px;height:28px;border-radius:50%;background:var(--adim);border:1px solid var(--amber);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">🌡️</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:11px;font-weight:700">${c.nombre||'Sin nombre'}</div>
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">${c.telefono}</div>
+        <div style="font-size:11px;font-weight:700">${esc(c.nombre)||'Sin nombre'}</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">${esc(c.telefono)}</div>
       </div>
-      <button onclick="sendWA('${c.telefono}')" class="btn btn-secondary btn-sm" style="font-size:9px;padding:3px 7px">💬 WA</button>
+      <button onclick="sendWA('${telDigits(c.telefono)}')" class="btn btn-secondary btn-sm" style="font-size:9px;padding:3px 7px">💬 WA</button>
     </div>`).join('');
 }
 
@@ -1832,8 +2037,8 @@ function mapaClick(prov) {
   title.textContent = `📍 ${prov} — ${contacts.length} clientes`;
   body.innerHTML = contacts.slice(0,6).map(c=>`
     <div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--bord)">
-      <div style="flex:1;font-size:10px;font-weight:600">${c.nombre||'—'}</div>
-      <button onclick="sendWA('${c.telefono}')" style="padding:2px 6px;background:var(--gdim);border:1px solid var(--green);border-radius:3px;color:var(--green2);font-size:8px;cursor:pointer">WA</button>
+      <div style="flex:1;font-size:10px;font-weight:600">${esc(c.nombre)||'—'}</div>
+      <button onclick="sendWA('${telDigits(c.telefono)}')" style="padding:2px 6px;background:var(--gdim);border:1px solid var(--green);border-radius:3px;color:var(--green2);font-size:8px;cursor:pointer">WA</button>
     </div>`).join('') +
     (contacts.length>6 ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:7px">+${(contacts.length-6).toLocaleString('es-AR')} más en ${prov}</div>` : '');
 }
@@ -2060,7 +2265,7 @@ async function gsStartRun(){
           GS.ids.add(place.place_id);
           await gsSleep(220);
           const det=await gsDetailCall(place.place_id);
-          const item={provincia:job.pname,nombre:place.name||'',direccion:det.formatted_address||place.vicinity||'',tel:det.formatted_phone_number||'',tel_int:det.international_phone_number||'',web:det.website||'',maps:det.url||`https://maps.google.com/?place_id=${place.place_id}`,rating:place.rating||'',reviews:place.user_ratings_total||'',horarios:(det.opening_hours?.weekday_text||[]).join(' | '),tipo:(place.types||[]).filter(t=>!['point_of_interest','establishment'].includes(t)).slice(0,2).join(', ')};
+          const item={place_id:place.place_id,provincia:job.pname,nombre:place.name||'',direccion:det.formatted_address||place.vicinity||'',tel:det.formatted_phone_number||'',tel_int:det.international_phone_number||'',web:det.website||'',maps:det.url||`https://maps.google.com/?place_id=${place.place_id}`,rating:place.rating||'',reviews:place.user_ratings_total||'',horarios:(det.opening_hours?.weekday_text||[]).join(' | '),tipo:(place.types||[]).filter(t=>!['point_of_interest','establishment'].includes(t)).slice(0,2).join(', ')};
           GS.results.push(item);nuevos++;
           const q=GS.queue.find(q=>q.name===job.pname);if(q)q.count++;
           gsAddCard(item);gsUpdStats();
@@ -2114,7 +2319,7 @@ function gsAddCard(item){
   const el=document.getElementById('gsResEl');
   if(el.children.length===1&&!el.children[0].classList.contains('gs-rc')) el.innerHTML='';
   const d=document.createElement('div');d.className='gs-rc';
-  d.innerHTML=`<div class="gs-rcn">${item.nombre}</div><div class="gs-rca">${item.direccion||'—'}</div><div class="gs-rcch"><span class="gs-ch z">${item.provincia}</span>${item.tel?`<span class="gs-ch t">📞 ${item.tel}</span>`:''}${item.web?`<span class="gs-ch w">🌐 web</span>`:''}${item.rating?`<span class="gs-ch r">★ ${item.rating}</span>`:''}</div>`;
+  d.innerHTML=`<div class="gs-rcn">${esc(item.nombre)}</div><div class="gs-rca">${esc(item.direccion)||'—'}</div><div class="gs-rcch"><span class="gs-ch z">${esc(item.provincia)}</span>${item.tel?`<span class="gs-ch t">📞 ${esc(item.tel)}</span>`:''}${item.web?`<span class="gs-ch w">🌐 web</span>`:''}${item.rating?`<span class="gs-ch r">★ ${esc(item.rating)}</span>`:''}</div>`;
   el.insertBefore(d,el.firstChild);
   while(el.children.length>200) el.removeChild(el.lastChild);
   document.getElementById('gsRCnt').textContent=`(${GS.results.length})`;
@@ -2150,13 +2355,25 @@ function gsDl(){
 }
 function gsImportCRM(){
   if(!GS.results.length) return;
-  const nuevos=GS.results.map(r=>({nombre:r.nombre,telefono:r.tel,direccion:r.direccion,provincia:r.provincia,estado:'Lead',fuente:'GomeScraper',etiquetas:['Gomería'],notas:r.web||''})).filter(r=>r.telefono);
-  const existing=new Set(allContacts.map(c=>c.telefono?.replace(/\D/g,'')));
-  const uniq=nuevos.filter(r=>!existing.has(r.telefono.replace(/\D/g,'')));
+  const existing=new Set(allContacts.map(c=>telDigits(c.telefono)));
+  const existingPid=new Set(allContacts.map(c=>c.place_id).filter(Boolean));
+  const num=v=>(v===''||v==null||isNaN(Number(v)))?null:Number(v);
+  const uniq=[];let sinTel=0,dupes=0;
+  for(const r of GS.results){
+    const tel=normalizePhone(r.tel_int||r.tel);
+    const key=telDigits(tel);
+    if(!key){sinTel++;continue;}
+    if(existing.has(key)||(r.place_id&&existingPid.has(r.place_id))){dupes++;continue;}
+    existing.add(key);if(r.place_id)existingPid.add(r.place_id);
+    uniq.push({id:newId(),nombre:r.nombre,telefono:tel,direccion:r.direccion,provincia:r.provincia,estado:'Lead',fuente:'GomeScraper',etiquetas:['Gomería'],notas:'',
+      web:r.web||'',maps:r.maps||'',rating:num(r.rating),reviews:num(r.reviews),horarios:r.horarios||'',tipo:r.tipo||'',place_id:r.place_id||''});
+  }
   allContacts=[...allContacts,...uniq];
-  filterContacts();updateDashboard();updateMapaClientes();
+  refreshContacts();
+  pushContactsToSupabase(uniq);
   addNotif('👥',`${uniq.length} gomerías importadas al CRM como leads`);
-  alert(`✅ ${uniq.length} gomerías importadas al CRM con etiqueta "Gomería" y estado "Lead".`);
+  alert(`✅ ${uniq.length} gomerías importadas al CRM con etiqueta "Gomería" y estado "Lead".\n`+
+    `${dupes} ya estaban en el CRM · ${sinTel} sin teléfono (no importadas).`);
 }
 </script>
 </body>

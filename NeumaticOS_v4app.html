@@ -608,9 +608,53 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
         </div>
       </div>
 
+      <!-- Modal crear landing -->
+      <div class="modal-overlay" id="landingModal">
+        <div class="modal-box" style="width:1040px;max-width:96vw">
+          <div class="modal-hdr">
+            <div><div class="modal-title">🚀 Crear landing</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px" id="lpSub">—</div></div>
+            <button class="modal-close" onclick="closeModal('landingModal')">✕ Cerrar</button>
+          </div>
+          <div class="modal-body">
+            <div style="display:grid;grid-template-columns:minmax(260px,330px) 1fr;gap:16px">
+              <div>
+                <div class="form-group"><label class="form-label">PLANTILLA</label>
+                  <select class="form-select" id="lpPlantilla" onchange="lpSwitchTemplate()">
+                    <option value="oferta">Oferta de tu empresa para el contacto</option>
+                    <option value="negocio">Web para el negocio del contacto</option>
+                  </select>
+                  <div id="lpPlantillaHelp" style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:5px;line-height:1.6"></div>
+                </div>
+                <div class="form-group"><label class="form-label">TU EMPRESA</label><input class="form-input" id="lpEmpresa" oninput="lpChanged()"></div>
+                <div class="form-group" id="lpWaGroup"><label class="form-label">TU WHATSAPP</label><input class="form-input" id="lpWa" placeholder="+54 9 11 XXXX-XXXX" oninput="lpChanged()"></div>
+                <div class="form-group"><label class="form-label" id="lpTituloLbl">TÍTULO</label><input class="form-input" id="lpTitulo" oninput="lpChanged()"></div>
+                <div class="form-group"><label class="form-label">TEXTO</label><textarea class="form-input" id="lpMensaje" rows="3" style="resize:vertical" oninput="lpChanged()"></textarea></div>
+                <div class="form-group"><label class="form-label" id="lpItemsLbl">BENEFICIOS (UNO POR LÍNEA)</label><textarea class="form-input" id="lpItems" rows="4" style="resize:vertical" oninput="lpChanged()"></textarea></div>
+                <div class="form-group" style="display:flex;align-items:center;gap:10px"><label class="form-label" style="margin:0">COLOR</label><input type="color" id="lpColor" value="#2563eb" oninput="lpChanged()" style="width:42px;height:28px;border:none;background:none;cursor:pointer"></div>
+                <div style="font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.7">Podés usar <span style="color:var(--p3)">{nombre}</span>, <span style="color:var(--p3)">{provincia}</span> y <span style="color:var(--p3)">{empresa}</span> en los textos.</div>
+              </div>
+              <div style="display:flex;flex-direction:column;min-width:0">
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+                  <span class="form-label" style="margin:0">VISTA PREVIA</span>
+                  <select class="form-select" id="lpPreviewSel" onchange="lpRenderPreview()" style="flex:1;height:30px;font-size:10px;padding:4px 8px"></select>
+                  <button class="btn btn-secondary btn-sm" onclick="lpOpenTab()" title="Abrir en pestaña nueva">↗</button>
+                </div>
+                <iframe id="lpPreview" title="Vista previa de la landing" style="flex:1;min-height:460px;width:100%;border:1px solid var(--bord2);border-radius:8px;background:#fff"></iframe>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('landingModal')">Cancelar</button>
+            <button class="btn btn-primary" id="lpDlBtn" onclick="lpDownload()">⬇ Descargar</button>
+          </div>
+        </div>
+      </div>
+
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div><div class="sec-title">Contactos / CRM</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px">Base de clientes — <span id="contactCount" style="color:var(--p3)">0 contactos</span></div></div>
         <div style="display:flex;gap:6px">
+          <span id="selInfo" style="display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;color:var(--p3)"><span id="selCount">0</span> seleccionados · <a href="#" onclick="clearSelection();return false" style="color:var(--text3)">limpiar</a></span>
+          <button class="btn btn-primary btn-sm" onclick="openLandingModal()">🚀 Crear landing</button>
           <button class="btn btn-secondary btn-sm" onclick="exportContacts()">📤 Exportar</button>
           <button class="btn btn-secondary btn-sm" onclick="openModal('importModal')">📥 Importar</button>
           <button class="btn btn-primary btn-sm" onclick="openModal('importModal')">+ Agregar</button>
@@ -1679,6 +1723,7 @@ function renderPage() {
   const slice = filteredContacts.slice((currentPage-1)*pageSize, currentPage*pageSize);
   if (!slice.length) {
     tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state" style="padding:36px"><div class="empty-icon">🔍</div><div class="empty-title">Sin resultados</div></div></td></tr>`;
+    updateSelectionUI();
     return;
   }
   const chipMap = { 'Activo':'chip-green','Frío':'chip-amber','Perdido':'chip-red','Lead':'chip-blue' };
@@ -1686,7 +1731,7 @@ function renderPage() {
   tbody.innerHTML = slice.map(c => {
     const tipos = tiposOf(c).map(tipoLabel).join(', ');
     return `<tr>
-    <td><input type="checkbox" style="accent-color:var(--p2)"></td>
+    <td><input type="checkbox" style="accent-color:var(--p2)"${selectedIds.has(c.id) ? ' checked' : ''} onchange="toggleSelect('${c.id}',this.checked)"></td>
     <td class="td-main" style="cursor:pointer" onclick="show360('${c.id}')">${esc(c.nombre)||'—'}${tipos ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text3);font-weight:400">${esc(tipos)}</div>` : ''}</td>
     <td class="td-mono">${esc(c.telefono)||'—'}</td>
     <td>${esc(c.provincia)||'—'}</td>
@@ -1700,6 +1745,7 @@ function renderPage() {
     </td>
   </tr>`;
   }).join('');
+  updateSelectionUI();
 }
 
 function changePage(dir) {
@@ -1708,7 +1754,25 @@ function changePage(dir) {
   renderPage();
 }
 function setPageSize(n) { pageSize = n; currentPage = 1; renderPage(); }
-function toggleSelectAll(cb) { document.querySelectorAll('#contactsTbody input[type=checkbox]').forEach(c => c.checked = cb.checked); }
+// ── Selección de contactos (se mantiene al cambiar de página o filtro) ──
+let selectedIds = new Set();
+function pageSlice() { return filteredContacts.slice((currentPage-1)*pageSize, currentPage*pageSize); }
+function updateSelectionUI() {
+  for (const id of selectedIds) if (!contactMap.has(id)) selectedIds.delete(id);
+  const info = document.getElementById('selInfo');
+  if (info) info.style.display = selectedIds.size ? 'inline-flex' : 'none';
+  const n = document.getElementById('selCount');
+  if (n) n.textContent = selectedIds.size.toLocaleString('es-AR');
+  const all = document.getElementById('selectAll');
+  const slice = pageSlice();
+  if (all) all.checked = slice.length > 0 && slice.every(c => selectedIds.has(c.id));
+}
+function toggleSelect(id, on) { on ? selectedIds.add(id) : selectedIds.delete(id); updateSelectionUI(); }
+function toggleSelectAll(cb) {
+  pageSlice().forEach(c => cb.checked ? selectedIds.add(c.id) : selectedIds.delete(c.id));
+  renderPage();
+}
+function clearSelection() { selectedIds.clear(); renderPage(); }
 function sendWA(tel) { const c = telDigits(tel); window.open(`https://wa.me/${c}`, '_blank'); }
 
 function addTag(id) {
@@ -1786,6 +1850,10 @@ function show360(id) {
             <span style="font-size:14px">📥</span>
             <div><div style="font-size:11px;font-weight:600">Contacto importado</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3)">Fuente: ${esc(c.fuente||'Manual')}</div></div>
           </div>
+          ${c.landing ? `<div style="padding:12px 14px;border-bottom:1px solid var(--bord);display:flex;align-items:center;gap:8px">
+            <span style="font-size:14px">🚀</span>
+            <div><div style="font-size:11px;font-weight:600">Landing creada</div><div style="font-family:var(--mono);font-size:8px;color:var(--text3)">${esc(LP_TEMPLATES[c.landing.plantilla]?.nombre || c.landing.plantilla)} · ${new Date(c.landing.fecha).toLocaleString('es-AR')}</div></div>
+          </div>` : ''}
           <div class="empty-state" style="padding:24px">
             <div class="empty-icon" style="font-size:24px">📋</div>
             <div class="empty-title" style="font-size:11px">Sin más actividad</div>
@@ -1816,6 +1884,270 @@ function exportContacts() {
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
   a.download = `contactos_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CREAR LANDING (contactos seleccionados)
+// ══════════════════════════════════════════════════════════════
+const LP_TEMPLATES = {
+  oferta: {
+    nombre: 'Oferta de tu empresa',
+    help: 'Página de tu empresa dirigida a cada contacto, con botón para que te escriba por WhatsApp.',
+    tituloLbl: 'TÍTULO', itemsLbl: 'BENEFICIOS (UNO POR LÍNEA)',
+    titulo: 'Neumáticos importados a precio mayorista para {nombre}',
+    mensaje: 'Trabajamos con gomerías y talleres de {provincia}: precios mayoristas, stock permanente y envíos a todo el país.',
+    items: 'Precios mayoristas\nEnvíos a {provincia}\nStock permanente de las medidas más vendidas\nFinanciación con tarjeta',
+  },
+  negocio: {
+    nombre: 'Web para su negocio',
+    help: 'Sitio para el negocio del contacto con sus datos de Google (rating, horarios, mapa). Ideal para ofrecérselo a los que no tienen web.',
+    tituloLbl: 'ESLOGAN', itemsLbl: 'SERVICIOS (UNO POR LÍNEA)',
+    titulo: 'Tu gomería de confianza en {provincia}',
+    mensaje: 'Atención rápida, precios justos y el asesoramiento que tu auto necesita.',
+    items: 'Gomería\nVenta de neumáticos\nAlineación y balanceo\nAuxilio',
+  },
+};
+const LP_FIELDS = ['titulo','mensaje','items'];
+let lpCfg = null, lpIds = [];
+
+function lpLoadCfg() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem('landingCfg') || '{}') || {}; } catch {}
+  lpCfg = {
+    plantilla: LP_TEMPLATES[saved.plantilla] ? saved.plantilla : 'oferta',
+    empresa: saved.empresa ?? 'Neumáticos Importados',
+    wa: saved.wa ?? (CFG.waNumber || ''),
+    color: saved.color || '#2563eb',
+  };
+  for (const t of Object.keys(LP_TEMPLATES)) {
+    lpCfg[t] = {};
+    LP_FIELDS.forEach(f => lpCfg[t][f] = saved[t]?.[f] ?? LP_TEMPLATES[t][f]);
+  }
+}
+function lpSaveCfg() { try { localStorage.setItem('landingCfg', JSON.stringify(lpCfg)); } catch {} }
+
+function lpFillForm() {
+  const t = lpCfg.plantilla, def = LP_TEMPLATES[t];
+  document.getElementById('lpPlantilla').value = t;
+  document.getElementById('lpPlantillaHelp').textContent = def.help;
+  document.getElementById('lpTituloLbl').textContent = def.tituloLbl;
+  document.getElementById('lpItemsLbl').textContent = def.itemsLbl;
+  document.getElementById('lpWaGroup').style.display = t === 'oferta' ? '' : 'none';
+  document.getElementById('lpEmpresa').value = lpCfg.empresa;
+  document.getElementById('lpWa').value = lpCfg.wa;
+  document.getElementById('lpColor').value = lpCfg.color;
+  document.getElementById('lpTitulo').value = lpCfg[t].titulo;
+  document.getElementById('lpMensaje').value = lpCfg[t].mensaje;
+  document.getElementById('lpItems').value = lpCfg[t].items;
+}
+function lpReadForm() {
+  const t = lpCfg.plantilla;
+  lpCfg.empresa = document.getElementById('lpEmpresa').value.trim();
+  lpCfg.wa = document.getElementById('lpWa').value.trim();
+  lpCfg.color = document.getElementById('lpColor').value;
+  lpCfg[t].titulo = document.getElementById('lpTitulo').value;
+  lpCfg[t].mensaje = document.getElementById('lpMensaje').value;
+  lpCfg[t].items = document.getElementById('lpItems').value;
+}
+function lpSwitchTemplate() {
+  lpReadForm();
+  lpCfg.plantilla = document.getElementById('lpPlantilla').value;
+  lpFillForm(); lpSaveCfg(); lpRenderPreview();
+}
+let _lpT = null;
+function lpChanged() { lpReadForm(); lpSaveCfg(); clearTimeout(_lpT); _lpT = setTimeout(lpRenderPreview, 200); }
+
+function openLandingModal() {
+  lpIds = [...selectedIds].filter(id => contactMap.has(id));
+  if (!lpIds.length) { alert('Seleccioná uno o más contactos con las casillas de la tabla y volvé a tocar "Crear landing".'); return; }
+  lpLoadCfg(); lpFillForm();
+  document.getElementById('lpSub').textContent = `${lpIds.length.toLocaleString('es-AR')} contacto${lpIds.length === 1 ? '' : 's'} seleccionado${lpIds.length === 1 ? '' : 's'}`;
+  document.getElementById('lpDlBtn').textContent = lpIds.length === 1 ? '⬇ Descargar HTML' : `⬇ Descargar ${lpIds.length.toLocaleString('es-AR')} landings (.zip)`;
+  const sel = document.getElementById('lpPreviewSel');
+  sel.innerHTML = lpIds.slice(0, 500).map(id => `<option value="${id}">${esc(getContact(id).nombre || 'Sin nombre')}</option>`).join('');
+  openModal('landingModal');
+  lpRenderPreview();
+}
+
+function lpRenderPreview() {
+  const c = getContact(document.getElementById('lpPreviewSel').value);
+  if (c) document.getElementById('lpPreview').srcdoc = buildLanding(c, lpCfg);
+}
+function lpOpenTab() {
+  const c = getContact(document.getElementById('lpPreviewSel').value);
+  if (!c) return;
+  window.open(URL.createObjectURL(new Blob([buildLanding(c, lpCfg)], { type: 'text/html;charset=utf-8' })), '_blank');
+}
+
+function lpSlug(s) {
+  return String(s || 'contacto').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'contacto';
+}
+
+function lpDownload() {
+  lpReadForm(); lpSaveCfg();
+  if (lpCfg.plantilla === 'oferta' && !telDigits(lpCfg.wa)) { alert('Completá TU WHATSAPP: es el número al que te van a escribir desde la landing.'); return; }
+  const contacts = lpIds.map(getContact).filter(Boolean);
+  if (!contacts.length) return;
+  const used = new Set();
+  const files = contacts.map(c => {
+    let name = lpSlug(c.nombre), n = 2;
+    while (used.has(name)) name = `${lpSlug(c.nombre)}-${n++}`;
+    used.add(name);
+    return { name: name + '.html', data: buildLanding(c, lpCfg), c };
+  });
+  const fecha = new Date().toISOString();
+  const a = document.createElement('a');
+  if (files.length === 1) {
+    a.href = URL.createObjectURL(new Blob([files[0].data], { type: 'text/html;charset=utf-8' }));
+    a.download = files[0].name;
+  } else {
+    const index = lpIndexPage(files);
+    a.href = URL.createObjectURL(makeZip([{ name: 'index.html', data: index }, ...files]));
+    a.download = `landings_${fecha.slice(0, 10)}.zip`;
+  }
+  a.click();
+  contacts.forEach(c => { c.landing = { plantilla: lpCfg.plantilla, fecha }; });
+  saveContacts();
+  addNotif('🚀', `${contacts.length.toLocaleString('es-AR')} landing${contacts.length === 1 ? '' : 's'} creada${contacts.length === 1 ? '' : 's'} (${esc(LP_TEMPLATES[lpCfg.plantilla].nombre)})`);
+  closeModal('landingModal');
+}
+
+function lpIndexPage(files) {
+  const rows = files.map(f => `<li><a href="${esc(f.name)}">${esc(f.c.nombre || f.name)}</a><span>${esc(f.c.provincia || '')}</span></li>`).join('');
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Landings</title>
+<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;color:#0f172a}ul{list-style:none;padding:0}li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #e2e8f0}a{color:#2563eb;font-weight:600}span{color:#64748b;font-size:14px}</style></head>
+<body><h1>Landings (${files.length})</h1><ul>${rows}</ul></body></html>`;
+}
+
+// Arma el HTML autocontenido de la landing de un contacto
+function buildLanding(c, cfg) {
+  const t = cfg.plantilla, tc = cfg[t];
+  const fill = s => String(s || '').replace(/\{nombre\}/g, c.nombre || '').replace(/\{provincia\}/g, c.provincia || 'tu zona').replace(/\{empresa\}/g, cfg.empresa || '');
+  const color = /^#[0-9a-f]{6}$/i.test(cfg.color) ? cfg.color : '#2563eb';
+  const titulo = fill(tc.titulo), mensaje = fill(tc.mensaje);
+  const items = fill(tc.items).split('\n').map(s => s.trim()).filter(Boolean);
+  const nombre = c.nombre || 'Sin nombre';
+  const css = `*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#0f172a;background:#f8fafc;line-height:1.55}
+a{color:inherit}.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+header{background:#fff;border-bottom:1px solid #e2e8f0}header .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px}
+.brand{font-weight:800;font-size:18px;color:${color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero{background:linear-gradient(135deg,${color},#0f172a);color:#fff;padding:72px 0 80px}
+.kicker{display:inline-block;background:#ffffff22;border:1px solid #ffffff44;padding:4px 12px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:18px}
+h1{font-size:clamp(28px,5vw,46px);line-height:1.15;margin:0 0 16px;max-width:800px}
+.lead{font-size:clamp(16px,2.2vw,19px);opacity:.92;max-width:680px;margin:0 0 28px}
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 22px;border-radius:12px;font-weight:700;text-decoration:none;font-size:16px}
+.btn-wa{background:#25d366;color:#fff}.btn-wa:hover{background:#1ebe5a}
+.btn-light{background:#fff;color:${color}}.btn-ghost{border:1.5px solid #ffffff88;color:#fff}
+.rating{display:flex;align-items:center;gap:8px;margin:0 0 24px;font-weight:600}.stars{color:#fbbf24;letter-spacing:2px}
+section.block{padding:56px 0}h2{font-size:clamp(22px,3.4vw,30px);margin:0 0 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;display:flex;gap:12px;align-items:flex-start;font-weight:600}
+.check{flex:0 0 28px;height:28px;border-radius:50%;background:${color}1a;color:${color};display:flex;align-items:center;justify-content:center;font-weight:800}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+.box{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px}
+.hours{list-style:none;margin:0;padding:0}.hours li{padding:8px 0;border-bottom:1px solid #f1f5f9;text-transform:capitalize}.hours li:last-child{border:none}
+.map{width:100%;height:300px;border:0;border-radius:14px}
+.cta{background:#0f172a;color:#fff;text-align:center;padding:56px 0}.cta p{opacity:.8;margin:0 0 24px}
+footer{padding:28px 0;color:#64748b;font-size:14px;text-align:center}
+.float{position:fixed;right:18px;bottom:18px;width:58px;height:58px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;text-decoration:none;box-shadow:0 8px 24px #0004}`;
+  const page = (title, desc, body) => `<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(desc)}">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(desc)}">
+<meta name="theme-color" content="${color}">
+<style>${css}</style>
+</head>
+<body>
+${body}
+</body>
+</html>`;
+  const cards = items.map(i => `<div class="card"><span class="check">✓</span><span>${esc(i)}</span></div>`).join('');
+
+  if (t === 'negocio') {
+    const telD = telDigits(c.telefono);
+    const waHref = telD ? `https://wa.me/${telD}?text=${encodeURIComponent(`Hola ${nombre}! Les escribo desde su página web.`)}` : '';
+    const q = encodeURIComponent([nombre, c.direccion, c.provincia].filter(Boolean).join(', '));
+    const mapsHref = safeUrl(c.maps) || `https://www.google.com/maps/search/?api=1&query=${q}`;
+    const tipos = tiposOf(c).map(tipoLabel).join(' · ');
+    const rating = c.rating != null && c.rating !== '' ? Number(c.rating) : null;
+    const stars = rating ? '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating)) : '';
+    const horarios = String(c.horarios || '').split('|').map(h => h.trim()).filter(Boolean);
+    const body = `<header><div class="wrap"><span class="brand">${esc(nombre)}</span>${telD ? `<a class="btn btn-wa" style="padding:9px 16px;font-size:14px" href="${esc(waHref)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div></header>
+<section class="hero"><div class="wrap">
+${tipos ? `<span class="kicker">${esc(tipos)}</span>` : ''}
+<h1>${esc(nombre)}</h1>
+<p class="lead">${esc(titulo)}</p>
+${rating ? `<div class="rating"><span class="stars">${stars}</span><span>${esc(rating)} en Google${c.reviews ? ` · ${Number(c.reviews).toLocaleString('es-AR')} reseñas` : ''}</span></div>` : ''}
+<div class="btns">
+${telD ? `<a class="btn btn-wa" href="${esc(waHref)}" target="_blank" rel="noopener">💬 Escribinos por WhatsApp</a>` : ''}
+<a class="btn btn-ghost" href="${esc(mapsHref)}" target="_blank" rel="noopener">📍 Cómo llegar</a>
+${telD ? `<a class="btn btn-ghost" href="tel:+${telD}">📞 Llamar</a>` : ''}
+</div></div></section>
+${mensaje ? `<section class="block"><div class="wrap"><h2>Sobre nosotros</h2><p style="font-size:18px;max-width:760px;margin:0">${esc(mensaje)}</p></div></section>` : ''}
+${items.length ? `<section class="block" style="padding-top:0"><div class="wrap"><h2>Servicios</h2><div class="grid">${cards}</div></div></section>` : ''}
+<section class="block" style="padding-top:0"><div class="wrap"><div class="two">
+<div class="box"><h2 style="font-size:22px">Dónde estamos</h2><p style="margin:0 0 6px">${esc(c.direccion || '')}</p><p style="margin:0 0 16px;color:#64748b">${esc(c.provincia || '')}</p>${c.telefono ? `<p style="margin:0 0 16px"><strong>Tel:</strong> ${esc(c.telefono)}</p>` : ''}${horarios.length ? `<h2 style="font-size:18px;margin-top:20px">Horarios</h2><ul class="hours">${horarios.map(h => `<li>${esc(h)}</li>`).join('')}</ul>` : ''}</div>
+<iframe class="map" loading="lazy" title="Mapa" src="https://www.google.com/maps?q=${q}&output=embed"></iframe>
+</div></div></section>
+<footer>© ${new Date().getFullYear()} ${esc(nombre)}${cfg.empresa ? ` · Sitio creado por ${esc(cfg.empresa)}` : ''}</footer>
+${telD ? `<a class="float" href="${esc(waHref)}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>` : ''}`;
+    return page(`${nombre}${c.provincia ? ' — ' + c.provincia : ''}`, titulo || mensaje, body);
+  }
+
+  // Plantilla "oferta": tu empresa → el contacto
+  const myWa = telDigits(normalizePhone(cfg.wa));
+  const waMsg = `Hola ${cfg.empresa || ''}! Soy de ${nombre}${c.provincia ? ` (${c.provincia})` : ''}. Vi la propuesta y quiero recibir precios.`;
+  const waHref = myWa ? `https://wa.me/${myWa}?text=${encodeURIComponent(waMsg)}` : '#';
+  const body = `<header><div class="wrap"><span class="brand">${esc(cfg.empresa || '')}</span><a class="btn btn-wa" style="padding:9px 16px;font-size:14px" href="${esc(waHref)}" target="_blank" rel="noopener">WhatsApp</a></div></header>
+<section class="hero"><div class="wrap">
+<span class="kicker">Propuesta para ${esc(nombre)}</span>
+<h1>${esc(titulo)}</h1>
+<p class="lead">${esc(mensaje)}</p>
+<div class="btns"><a class="btn btn-wa" href="${esc(waHref)}" target="_blank" rel="noopener">💬 Quiero precios por WhatsApp</a></div>
+</div></section>
+${items.length ? `<section class="block"><div class="wrap"><h2>Por qué trabajar con ${esc(cfg.empresa || 'nosotros')}</h2><div class="grid">${cards}</div></div></section>` : ''}
+<section class="cta"><div class="wrap"><h2>¿Hablamos, ${esc(nombre)}?</h2><p>Te pasamos la lista de precios y disponibilidad en el momento.</p><a class="btn btn-wa" href="${esc(waHref)}" target="_blank" rel="noopener">💬 Escribinos por WhatsApp</a></div></section>
+<footer>${esc(cfg.empresa || '')} · Propuesta preparada para ${esc(nombre)}${c.provincia ? `, ${esc(c.provincia)}` : ''}</footer>
+<a class="float" href="${esc(waHref)}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>`;
+  return page(`${cfg.empresa || 'Propuesta'} — Propuesta para ${nombre}`, mensaje || titulo, body);
+}
+
+// ── ZIP sin compresión (para descargar varias landings juntas sin librerías) ──
+const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_TABLE[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) {
+  const enc = new TextEncoder(), parts = [], central = [];
+  const d = new Date();
+  const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  let offset = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name), data = enc.encode(f.data), crc = crc32(data);
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true);
+    h.setUint16(10, time, true); h.setUint16(12, date, true); h.setUint32(14, crc, true);
+    h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, name.length, true);
+    parts.push(h, name, data);
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint16(8, 0x0800, true);
+    cd.setUint16(12, time, true); cd.setUint16(14, date, true); cd.setUint32(16, crc, true);
+    cd.setUint32(20, data.length, true); cd.setUint32(24, data.length, true); cd.setUint16(28, name.length, true);
+    cd.setUint32(42, offset, true);
+    central.push(cd, name);
+    offset += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((a, p) => a + p.byteLength, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, end], { type: 'application/zip' });
 }
 
 // ══════════════════════════════════════════════════════════════
